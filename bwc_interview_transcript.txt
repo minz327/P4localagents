@@ -1,0 +1,74 @@
+Processed Transcript — BWC Interview
+Theme-based, Quote-Driven
+
+1. Initial Adoption & First Impressions
+Customer
+"We have had a chance to look at it and the first thing for me is the drill-down ability in it."
+
+Customer
+"Just to get more visibility, I did start using the filters… there was a bug… it's just an annoyance. It's not like a major thing."
+
+2. What Worked Well
+2.1 Visibility into Agent Activity
+Customer
+"We saw a sensitive interaction that went up like 4000%… they were actually loading test data… they were surprised that we caught them doing that."
+
+Customer
+"It's good to see it… where we would see a spike across the board and then you'd be like, 'Oh well, they haven't been using it and all of a sudden they did spike and use it.'"
+
+Customer
+"At this level it's awesome."
+
+3. Where the Experience Breaks Down
+3.1 Difficulty Identifying the Source of Risk
+Customer
+"It was very difficult to find out which one it was… I had to actually use the little sensitivity trend to identify it."
+
+Customer
+"It just made it hard to drill down and find out, OK, why did it go up."
+
+3.2 Missing Ownership Context
+Customer
+"We had to rely on going into Azure to identify what the subscription was and who owned it."
+
+Customer
+"It says 'no data available for owner'… that's kind of why we had to go back and use our business connections."
+
+3.3 Investigation Requires Leaving the Product
+Customer
+"I just kind of pivoted because I knew to go try to find it quickly… I was in Azure at that point."
+
+Customer
+"It is hard to go backwards from this information."
+
+4. Analyst Readiness & Operational Gaps
+Customer
+"I couldn't give this to an analyst on our team today because they wouldn't know what to do."
+
+Customer
+"It'd be overwhelming for him."
+
+5. Oversharing & Signal Trust
+Customer
+"Unfortunately we're healthcare and almost 90% of our interactions contain sensitive information."
+
+Customer
+"Medical terminology would be common, but it may not contain sensitive information for what we would consider sensitive."
+
+6. Alignment with Existing DLP Controls
+Customer
+"I'd like to be able to align it to what we use within the DLP platform."
+
+Customer
+"It's great that you guys have all these sets, but we want to target the ones that are most important to us."
+
+7. Alerts & Prioritization Needs
+Customer
+"It would be awesome to have something that says, 'Hey, we see this AI that has zero to no activity and all of a sudden it spikes.'"
+
+Customer
+"An alert of some sort… but it is hard to go backwards from this information."
+
+8. Core Sentiment (Customer's Own Words)
+Customer
+"It's great here… but it is hard to go backwards from this information."
