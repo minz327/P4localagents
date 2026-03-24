@@ -15,6 +15,8 @@ import DemoActivityExplorer from './pages/demo/DemoActivityExplorer'
 import EastmanOverview from './pages/eastman/EastmanOverview'
 import EastmanAgentDetails from './pages/eastman/EastmanAgentDetails'
 import EastmanActivityExplorer from './pages/eastman/EastmanActivityExplorer'
+import ClevelandOverview from './pages/cleveland/ClevelandOverview'
+import ClevelandAgentDetails from './pages/cleveland/ClevelandAgentDetails'
 
 export default function App() {
   return (
@@ -40,6 +42,9 @@ export default function App() {
           <Route path="eastman" element={<EastmanOverview />} />
           <Route path="eastman/agents/:agentId" element={<EastmanAgentDetails />} />
           <Route path="eastman/activity-explorer" element={<EastmanActivityExplorer />} />
+          {/* Cleveland routes — spike-to-action investigation prototype (cloned from proposal) */}
+          <Route path="cleveland" element={<ClevelandOverview />} />
+          <Route path="cleveland/agents/:agentId" element={<ClevelandAgentDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>
