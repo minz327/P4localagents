@@ -8,8 +8,8 @@ export default defineConfig(async () => {
   return {
     plugins: [react()],
     server: {
-      host: 'demo.purview.microsoft.com',
-      port: 80,
+      host: 'localhost',
+      port: 5173,
     },
   }
 })

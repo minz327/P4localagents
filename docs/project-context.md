@@ -1,6 +1,6 @@
 # Purview AI Observability Prototype — Project Context
 
-> **Last updated:** March 20, 2026
+> **Last updated:** March 26, 2026
 > **Primary author:** Min Zhou (minz@microsoft.com)
 > **Repo:** https://github.com/minz_microsoft/P4A365Prototype
 > **Live site:** https://purview-ai-observability-h3cwduabdycvd8ec.westus3-01.azurewebsites.net
@@ -77,8 +77,9 @@ The app has multiple versioned routes to support different customers/experiments
 | `/proposal` | Proposal | `proposalData.ts` | Early design proposal |
 | `/proposal-b` | Proposal B | proposalData.ts | Decisioning-first variant |
 | `/experiment` | Experiment | proposalData.ts | Experimental iteration |
-| `/eastman` | **Eastman** | `eastmanData.ts` | Customized Eastman customer demo (primary active version) |
-| `/demo` | Demo | `agentsData.ts` | Fresh copy from root — blank slate for next customer |
+| `/eastman` | Eastman | `eastmanData.ts` | Customized Eastman customer demo |
+| `/demo` | **Demo** | `agentsData.ts` | Primary active demo version (clean copy from root) |
+| `/cleveland` | Cleveland | `clevelandData.ts` | Cleveland customer demo — spike-to-action investigation prototype |
 
 ### Key files per version
 
@@ -98,7 +99,7 @@ src/lib/
 
 ## 4. Eastman Version — Feature Summary
 
-The Eastman version (`/eastman`) is the most feature-rich and is the primary demo target. All features below are in the Eastman version.
+The Eastman version (`/eastman`) is the most feature-rich. The `/demo` route is the primary active demo target. All features below are in the Eastman version.
 
 ### 4.1 Three Clickable Demo Flows
 
@@ -293,9 +294,16 @@ src/
 │   ├── Sidebar.tsx                  # Left navigation
 │   ├── SidebarIcons.tsx
 │   └── SensitiveActivityTrend.tsx
+│   └── cleveland/                   # Cleveland-specific components
+│       ├── ClevelandMetrics.tsx
+│       ├── CopilotPanel.tsx
+│       ├── CopilotPromptBar.tsx
+│       ├── NotificationPanel.tsx
+│       └── QuickInvestigateModal.tsx
 ├── lib/
 │   ├── agentsData.ts                # Root mock data (original 25 agents)
 │   ├── eastmanData.ts               # Eastman: 254 agents, incidents, governance types
+│   ├── clevelandData.ts             # Cleveland: anomaly/spike data, enrichment helpers
 │   ├── demoData.ts                  # (Legacy — was used by old demo, now eastmanData)
 │   ├── proposalData.ts              # Proposal variant data
 │   └── mockApi.ts                   # Simulated API helpers
@@ -309,11 +317,14 @@ src/
 │   │   ├── DemoAgents.tsx
 │   │   ├── DemoAgentDetails.tsx
 │   │   └── DemoActivityExplorer.tsx
-│   ├── eastman/                     # Eastman customer demo (primary)
+│   ├── eastman/                     # Eastman customer demo
 │   │   ├── EastmanOverview.tsx      # Banner + Metrics + Governance cards + Table
 │   │   ├── EastmanAgents.tsx        # 3-pillar table + Review flyout
 │   │   ├── EastmanAgentDetails.tsx  # Detail page + ReactFlow graph + Incidents
 │   │   └── EastmanActivityExplorer.tsx
+│   ├── cleveland/                   # Cleveland customer demo (spike-to-action)
+│   │   ├── ClevelandOverview.tsx
+│   │   └── ClevelandAgentDetails.tsx
 │   ├── proposal/                    # Earlier design proposals
 │   └── experiment/                  # Earlier experiments
 ├── deploy/

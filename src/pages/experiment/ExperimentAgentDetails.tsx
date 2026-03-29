@@ -9,8 +9,36 @@ import ReactFlow, {
   Handle,
   Position
 } from 'react-flow-renderer'
+import dagre from 'dagre'
 import { rows } from '../../lib/agentsData'
 import { getEnrichment, getRecentActivities, AgentEnrichment } from '../../lib/proposalData'
+
+// --- Dagre auto-layout helper ---
+const NODE_WIDTH = 140
+const NODE_HEIGHT = 80
+
+function applyDagreLayout(nodes: any[], edges: any[]) {
+  const g = new dagre.graphlib.Graph()
+  g.setDefaultEdgeLabel(() => ({}))
+  g.setGraph({ rankdir: 'TB', ranksep: 100, nodesep: 60, marginx: 40, marginy: 40 })
+
+  nodes.forEach((node: any) => {
+    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
+  })
+  edges.forEach((edge: any) => {
+    g.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(g)
+
+  return nodes.map((node: any) => {
+    const pos = g.node(node.id)
+    return {
+      ...node,
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+    }
+  })
+}
 
 /*
  * Experiment Agent Detail — Enhanced with:
@@ -93,10 +121,10 @@ const proposalGraphNodes: any[] = [
 ]
 
 const proposalGraphEdges: any[] = [
-  { id: 'e1-users', source: '1', target: 'users', type: 'smoothstep' },
-  { id: 'e1-sites', source: '1', target: 'sites', type: 'smoothstep', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-  { id: 'e1-tools', source: '1', target: 'tools', type: 'smoothstep' },
-  { id: 'e1-agents', source: '1', target: 'agents', type: 'smoothstep', animated: true, style: { stroke: '#C50F1F' } },
+  { id: 'e1-users', source: '1', target: 'users', type: 'default' },
+  { id: 'e1-sites', source: '1', target: 'sites', type: 'default', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+  { id: 'e1-tools', source: '1', target: 'tools', type: 'default' },
+  { id: 'e1-agents', source: '1', target: 'agents', type: 'default', animated: true, style: { stroke: '#C50F1F' } },
 ]
 
 const proposalGroupChildren: Record<string, any[]> = {
@@ -138,42 +166,42 @@ const proposalGroupChildren: Record<string, any[]> = {
 
 const proposalGroupChildEdges: Record<string, any[]> = {
   users: [
-    { id: 'e-users-1', source: 'users', target: 'user-1', type: 'smoothstep' },
-    { id: 'e-users-2', source: 'users', target: 'user-2', type: 'smoothstep' },
-    { id: 'e-users-3', source: 'users', target: 'user-3', type: 'smoothstep' },
+    { id: 'e-users-1', source: 'users', target: 'user-1', type: 'default' },
+    { id: 'e-users-2', source: 'users', target: 'user-2', type: 'default' },
+    { id: 'e-users-3', source: 'users', target: 'user-3', type: 'default' },
   ],
   sites: [
-    { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
   ],
   siteFiles: [
-    { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
   ],
   tools: [
-    { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'smoothstep' },
-    { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'smoothstep' },
-    { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'smoothstep' },
-    { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'smoothstep' },
+    { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'default' },
+    { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'default' },
+    { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'default' },
+    { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'default' },
   ],
   toolsMore: [
-    { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'smoothstep' },
-    { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'smoothstep' },
-    { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'smoothstep' },
-    { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'smoothstep' },
-    { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'smoothstep' },
-    { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'smoothstep' },
-    { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'smoothstep' },
-    { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'smoothstep' },
-    { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'smoothstep' },
-    { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'smoothstep' },
+    { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'default' },
+    { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'default' },
+    { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'default' },
+    { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'default' },
+    { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'default' },
+    { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'default' },
+    { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'default' },
+    { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'default' },
+    { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'default' },
+    { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'default' },
   ],
   agents: [
-    { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-    { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-    { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'smoothstep', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'default', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'default', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'default', style: { stroke: '#C50F1F' } },
   ],
 }
 
@@ -194,8 +222,8 @@ const buildTimeTopNodes: any[] = [
 ]
 
 const buildTimeTopEdges: any[] = [
-  { id: 'e1-conn', source: '1', target: 'connections', type: 'smoothstep' },
-  { id: 'e1-trig', source: '1', target: 'triggers', type: 'smoothstep' },
+  { id: 'e1-conn', source: '1', target: 'connections', type: 'default' },
+  { id: 'e1-trig', source: '1', target: 'triggers', type: 'default' },
 ]
 
 // Ghost children for new build-time groups
@@ -213,13 +241,13 @@ const buildTimeGroupChildren: Record<string, any[]> = {
 
 const buildTimeGroupChildEdges: Record<string, any[]> = {
   connections: [
-    { id: 'e-conn-1', source: 'connections', target: 'conn-1', type: 'smoothstep' },
-    { id: 'e-conn-2', source: 'connections', target: 'conn-2', type: 'smoothstep' },
-    { id: 'e-conn-3', source: 'connections', target: 'conn-3', type: 'smoothstep' },
-    { id: 'e-conn-4', source: 'connections', target: 'conn-4', type: 'smoothstep' },
+    { id: 'e-conn-1', source: 'connections', target: 'conn-1', type: 'default' },
+    { id: 'e-conn-2', source: 'connections', target: 'conn-2', type: 'default' },
+    { id: 'e-conn-3', source: 'connections', target: 'conn-3', type: 'default' },
+    { id: 'e-conn-4', source: 'connections', target: 'conn-4', type: 'default' },
   ],
   triggers: [
-    { id: 'e-trigger-1', source: 'triggers', target: 'trigger-1', type: 'smoothstep' },
+    { id: 'e-trigger-1', source: 'triggers', target: 'trigger-1', type: 'default' },
   ],
 }
 
@@ -239,14 +267,14 @@ const buildTimeExtraChildren: Record<string, any[]> = {
 
 const buildTimeExtraChildEdges: Record<string, any[]> = {
   toolsMore: [
-    { id: 'e-cfg-dyn', source: 'tool-more', target: 'cfg-dynamics', type: 'smoothstep' },
-    { id: 'e-cfg-wea', source: 'tool-more', target: 'cfg-weather', type: 'smoothstep' },
+    { id: 'e-cfg-dyn', source: 'tool-more', target: 'cfg-dynamics', type: 'default' },
+    { id: 'e-cfg-wea', source: 'tool-more', target: 'cfg-weather', type: 'default' },
   ],
   sites: [
-    { id: 'e-cfg-dv', source: 'sites', target: 'cfg-dataverse', type: 'smoothstep' },
+    { id: 'e-cfg-dv', source: 'sites', target: 'cfg-dataverse', type: 'default' },
   ],
   agents: [
-    { id: 'e-cfg-cb', source: 'agents', target: 'cfg-compbot', type: 'smoothstep' },
+    { id: 'e-cfg-cb', source: 'agents', target: 'cfg-compbot', type: 'default' },
   ],
 }
 
@@ -324,7 +352,7 @@ function getProposalActivitiesGraphData(expandedGroups: string[], viewMode: Grap
     }
     return { ...edge, animated: isRiskTarget, style: { ...(edge.style ?? {}), stroke: isRiskTarget ? '#C50F1F' : '#B3B3B3' } }
   })
-  return { nodes, edges: styledEdges }
+  return { nodes: applyDagreLayout(nodes, styledEdges), edges: styledEdges }
 }
 
 function getProposalNodeDetailModel(node: any) {
@@ -452,6 +480,7 @@ function ActivitiesContent() {
   const [selectedNode, setSelectedNode] = useState<any>(null)
   const [lastClickedNodeId, setLastClickedNodeId] = useState<string | null>(null)
   const [selectedUsersPanelRow, setSelectedUsersPanelRow] = useState<any | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: any } | null>(null)
 
   const selectedNodeDetails = selectedNode ? getProposalNodeDetailModel(selectedNode) : null
   const isUsersSummaryNode = selectedNode?.id === 'users'
@@ -511,7 +540,7 @@ function ActivitiesContent() {
   }, [isUsersSummaryNode])
 
   return (
-    <div ref={containerRef} className={`flex h-[78vh] min-h-[560px] max-h-[900px] border border-gray-200 bg-white shadow-sm rounded-md overflow-hidden ${isResizingRightPanel ? 'select-none' : ''}`}>
+    <div ref={containerRef} className={`flex flex-1 border border-gray-200 bg-white shadow-sm rounded-md overflow-hidden ${isResizingRightPanel ? 'select-none' : ''}`}>
 
       {/* Left Pane - Activity List */}
       {showLeftPanel && <div className="w-[340px] border-r border-gray-200 flex flex-col bg-[#F8F9FA]">
@@ -632,10 +661,10 @@ function ActivitiesContent() {
           onEdgesChange={onEdgesChange}
           onInit={setReactFlowInstance}
           onNodeClick={(_, node) => {
+            setContextMenu(null)
             setLastClickedNodeId(node?.id ?? null)
             if (node?.id !== '1') {
               setSelectedNode(node)
-              setShowRightPanel(true)
             }
             if (node?.data?.expandable && node?.data?.groupId) {
               setExpandedGroups((previous) => {
@@ -646,6 +675,21 @@ function ActivitiesContent() {
                 return [...previous, node.data.groupId]
               })
             }
+          }}
+          onNodeContextMenu={(event, node) => {
+            event.preventDefault()
+            if (node?.id === '1') return
+            setLastClickedNodeId(node?.id ?? null)
+            setSelectedNode(node)
+            const bounds = containerRef.current?.getBoundingClientRect()
+            setContextMenu({
+              x: event.clientX - (bounds?.left ?? 0),
+              y: event.clientY - (bounds?.top ?? 0),
+              node,
+            })
+          }}
+          onPaneClick={() => {
+            setContextMenu(null)
           }}
           nodeTypes={proposalNodeTypes}
           fitView
@@ -661,6 +705,45 @@ function ActivitiesContent() {
             className="!bg-white !shadow-sm !border !border-gray-200"
           />
         </ReactFlow>
+
+        {/* Context Menu */}
+        {contextMenu && (
+          <div
+            className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <button
+              className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+              onClick={() => {
+                setSelectedNode(contextMenu.node)
+                setShowRightPanel(true)
+                setContextMenu(null)
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><circle cx="10" cy="10" r="8"/><path d="M9.5 6h1v5h-1V6Zm0 6h1v1h-1v-1Z"/></svg>
+              View details
+            </button>
+            {contextMenu.node?.data?.expandable && (
+              <button
+                className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+                onClick={() => {
+                  const groupId = contextMenu.node?.data?.groupId
+                  if (groupId) {
+                    setExpandedGroups((prev) =>
+                      prev.includes(groupId)
+                        ? prev.filter((g) => g !== groupId && !getProposalDescendantGroups(groupId).includes(g))
+                        : [...prev, groupId]
+                    )
+                  }
+                  setContextMenu(null)
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><path d="M3 10h14M10 3v14"/></svg>
+                {expandedGroups.includes(contextMenu.node?.data?.groupId) ? 'Collapse group' : 'Expand group'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {showRightPanel && (
@@ -1562,9 +1645,9 @@ export default function ExperimentAgentDetails() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-auto">
+    <div className={`flex flex-col h-full bg-white ${activeTab === 'Activity graph' ? 'overflow-hidden' : 'overflow-auto'}`}>
       {/* Breadcrumb */}
-      <div className="px-6 py-4 border-b border-[#E0E0E0] flex items-center gap-2">
+      <div className="px-6 py-4 border-b border-[#E0E0E0] flex items-center gap-2 shrink-0">
         <button onClick={() => navigate('/experiment')} className="text-[#0078D4] hover:underline flex items-center gap-1 text-sm font-semibold">
           &larr; Back
         </button>
@@ -1572,9 +1655,9 @@ export default function ExperimentAgentDetails() {
         <span className="ml-auto px-2 py-0.5 bg-[#EBF3FC] text-[#0078D4] text-[10px] font-semibold rounded border border-[#0078D4]/20">EXPERIMENT</span>
       </div>
 
-      <div className="w-full">
+      <div className={`flex-1 flex flex-col ${activeTab === 'Activity graph' ? 'overflow-hidden' : 'overflow-auto'}`}>
         {/* Header */}
-        <div className="bg-white px-8 pt-6 pb-0 shadow-sm border-b border-gray-200">
+        <div className="bg-white px-8 pt-6 pb-0 shadow-sm border-b border-gray-200 shrink-0">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shrink-0 border border-gray-100 shadow-sm">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -1605,12 +1688,10 @@ export default function ExperimentAgentDetails() {
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50 min-h-screen">
+        <div className={`bg-gray-50 ${activeTab === 'Activity graph' ? 'flex-1 flex flex-col p-4 overflow-hidden' : 'p-8 min-h-screen'}`}>
           {activeTab === 'Overview' && <OverviewContent agent={agent} onNavigateToActivities={(targetGroup?: string) => { setActiveTab('Activity graph'); if (targetGroup) { setTimeout(() => { const event = new CustomEvent('navigate-to-group', { detail: targetGroup }); window.dispatchEvent(event); }, 100); } }} />}
           {activeTab === 'Activity graph' && (
-            <div>
-              <ActivitiesContent />
-            </div>
+            <ActivitiesContent />
           )}
           {activeTab === 'Recommendations' && (
             <div className="p-12 text-center text-gray-500">Recommendations content would go here.</div>
