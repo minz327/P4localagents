@@ -11,28 +11,61 @@ import ReactFlow, {
   Handle,
   Position
 } from 'react-flow-renderer';
+import dagre from 'dagre'
 import { demoAgents, DemoAgent, exfilIncidents, ExfilIncident, getGovernanceColor, getRiskTypeColor } from '../../lib/eastmanData'
+
+// --- Dagre auto-layout helper ---
+const NODE_WIDTH = 140
+const NODE_HEIGHT = 80
+
+function applyDagreLayout(nodes: any[], edges: any[]) {
+  const g = new dagre.graphlib.Graph()
+  g.setDefaultEdgeLabel(() => ({}))
+  g.setGraph({ rankdir: 'TB', ranksep: 100, nodesep: 60, marginx: 40, marginy: 40 })
+
+  nodes.forEach((node: any) => {
+    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
+  })
+  edges.forEach((edge: any) => {
+    g.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(g)
+
+  return nodes.map((node: any) => {
+    const pos = g.node(node.id)
+    return {
+      ...node,
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+    }
+  })
+}
 
 // --- Custom Node Components for the Graph ---
 
 const CustomNode = ({ data }: { data: any }) => {
-  const isRoot = data.type === 'root';
-    const hasCount = !!data.countBadge;
-        const inheritedRingColorClass = isRoot
-                ? 'ring-[#0078D4]'
-                : data.isRisk
-                        ? 'ring-[#C50F1F]'
-                        : hasCount
-                                ? 'ring-[#0078D4]'
-                                : 'ring-gray-400'
-  
-    return (
-        <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''}`}>
-            <div className={`relative w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white
-                ${data.isLastClicked ? `ring-4 ${inheritedRingColorClass} ring-offset-2 ring-offset-white animate-pulse` : ''}
-        ${isRoot ? 'border-[#0078D4]' : 
+  const isRoot = data.type === 'root'
+  const hasCount = !!data.countBadge
+  const inheritedRingColorClass = isRoot
+    ? 'ring-[#0078D4]'
+    : data.isRisk
+      ? 'ring-[#C50F1F]'
+      : hasCount
+        ? 'ring-[#0078D4]'
+        : 'ring-gray-400'
+
+  const isGhost = !!data.isGhost
+
+  return (
+    <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''} ${isGhost ? 'opacity-60' : ''}`}>
+      <div className={`relative w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white
+        ${isGhost ? 'border-dashed' : ''}
+        ${data.isLastClicked ? `ring-4 ${inheritedRingColorClass} ring-offset-2 ring-offset-white animate-pulse` : ''}
+        ${isRoot ? 'border-[#0078D4]' :
+          isGhost && data.isRisk ? 'border-[#C50F1F] bg-red-50' :
+          isGhost ? 'border-[#8A8886] bg-[#FAF9F8]' :
           data.isRisk ? 'border-[#C50F1F] bg-red-50' :
-                                        hasCount ? 'border-[#0078D4] bg-[#EBF3FC]' : 'border-gray-300'}`}>
+            hasCount ? 'border-[#0078D4] bg-[#EBF3FC]' : 'border-gray-300'}`}>
                 {data.countBadge && (
                     <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-[#0078D4] text-white text-[10px] leading-5 font-semibold text-center">
                         {data.countBadge}
@@ -98,10 +131,10 @@ const graphNodes: any[] = [
 ];
 
 const graphEdges: any[] = [
-    { id: 'e1-users', source: '1', target: 'users', type: 'smoothstep' },
-    { id: 'e1-sites', source: '1', target: 'sites', type: 'smoothstep', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e1-tools', source: '1', target: 'tools', type: 'smoothstep' },
-    { id: 'e1-agents', source: '1', target: 'agents', type: 'smoothstep', animated: true, style: { stroke: '#C50F1F' } },
+    { id: 'e1-users', source: '1', target: 'users', type: 'default' },
+    { id: 'e1-sites', source: '1', target: 'sites', type: 'default', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e1-tools', source: '1', target: 'tools', type: 'default' },
+    { id: 'e1-agents', source: '1', target: 'agents', type: 'default', animated: true, style: { stroke: '#C50F1F' } },
 ];
 
 const groupChildren: Record<string, any[]> = {
@@ -146,48 +179,114 @@ const groupChildren: Record<string, any[]> = {
 
 const groupChildEdges: Record<string, any[]> = {
     users: [
-        { id: 'e-users-1', source: 'users', target: 'user-1', type: 'smoothstep' },
-        { id: 'e-users-2', source: 'users', target: 'user-2', type: 'smoothstep' },
-        { id: 'e-users-3', source: 'users', target: 'user-3', type: 'smoothstep' },
+        { id: 'e-users-1', source: 'users', target: 'user-1', type: 'default' },
+        { id: 'e-users-2', source: 'users', target: 'user-2', type: 'default' },
+        { id: 'e-users-3', source: 'users', target: 'user-3', type: 'default' },
     ],
     sites: [
-        { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
     ],
     siteFiles: [
-        { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
     ],
     tools: [
-        { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'smoothstep' },
-        { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'smoothstep' },
-        { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'smoothstep' },
-        { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'smoothstep' },
+        { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'default' },
+        { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'default' },
+        { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'default' },
+        { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'default' },
     ],
     toolsMore: [
-        { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'smoothstep' },
-        { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'smoothstep' },
-        { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'smoothstep' },
-        { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'smoothstep' },
-        { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'smoothstep' },
-        { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'smoothstep' },
-        { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'smoothstep' },
-        { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'smoothstep' },
-        { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'smoothstep' },
-        { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'smoothstep' },
+        { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'default' },
+        { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'default' },
+        { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'default' },
+        { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'default' },
+        { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'default' },
+        { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'default' },
+        { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'default' },
+        { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'default' },
+        { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'default' },
+        { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'default' },
     ],
     agents: [
-        { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-        { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-        { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'smoothstep', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'default', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'default', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'default', style: { stroke: '#C50F1F' } },
     ],
 }
 
 const groupHierarchy: Record<string, string[]> = {
     sites: ['siteFiles'],
     tools: ['toolsMore'],
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD-TIME CONFIGURATION LAYER
+// Resources configured on the agent but not necessarily invoked at runtime.
+// Shown as "ghost" nodes with dashed borders in the unified graph.
+// ══════════════════════════════════════════════════════════
+
+const buildTimeTopNodes: any[] = [
+  { id: 'connections', type: 'custom', position: { x: 1160, y: 220 }, data: { label: 'Connections', subLabel: '4 configured', countBadge: '+4', isGhost: true, expandable: true, groupId: 'connections' } },
+  { id: 'triggers', type: 'custom', position: { x: 1380, y: 220 }, data: { label: 'Triggers', subLabel: '1 flow', countBadge: '+1', isGhost: true, expandable: true, groupId: 'triggers' } },
+]
+
+const buildTimeTopEdges: any[] = [
+  { id: 'e1-conn', source: '1', target: 'connections', type: 'default' },
+  { id: 'e1-trig', source: '1', target: 'triggers', type: 'default' },
+]
+
+const buildTimeGroupChildren: Record<string, any[]> = {
+  connections: [
+    { id: 'conn-1', type: 'custom', position: { x: 1020, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'Office 365 Users', isGhost: true } },
+    { id: 'conn-2', type: 'custom', position: { x: 1160, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'SharePoint', isGhost: true } },
+    { id: 'conn-3', type: 'custom', position: { x: 1300, y: 430 }, data: { label: 'svc-account', subLabel: 'SQL Server', isGhost: true } },
+    { id: 'conn-4', type: 'custom', position: { x: 1440, y: 430 }, data: { label: 'legacy-api-key', subLabel: 'No auth ⚠️', isGhost: true, isRisk: true } },
+  ],
+  triggers: [
+    { id: 'trigger-1', type: 'custom', position: { x: 1380, y: 430 }, data: { label: 'New email arrives', subLabel: 'Power Automate', isGhost: true } },
+  ],
+}
+
+const buildTimeGroupChildEdges: Record<string, any[]> = {
+  connections: [
+    { id: 'e-conn-1', source: 'connections', target: 'conn-1', type: 'default' },
+    { id: 'e-conn-2', source: 'connections', target: 'conn-2', type: 'default' },
+    { id: 'e-conn-3', source: 'connections', target: 'conn-3', type: 'default' },
+    { id: 'e-conn-4', source: 'connections', target: 'conn-4', type: 'default' },
+  ],
+  triggers: [
+    { id: 'e-trigger-1', source: 'triggers', target: 'trigger-1', type: 'default' },
+  ],
+}
+
+const buildTimeExtraChildren: Record<string, any[]> = {
+  toolsMore: [
+    { id: 'cfg-dynamics', type: 'custom', position: { x: 1260, y: 670 }, data: { label: 'Dynamics 365', subLabel: 'Configured · unused', isGhost: true } },
+    { id: 'cfg-weather', type: 'custom', position: { x: 1400, y: 670 }, data: { label: 'MSN Weather', subLabel: 'Configured · unused', isGhost: true } },
+  ],
+  sites: [
+    { id: 'cfg-dataverse', type: 'custom', position: { x: 500, y: 430 }, data: { label: 'Dataverse', subLabel: 'Configured · not accessed', isGhost: true } },
+  ],
+  agents: [
+    { id: 'cfg-compbot', type: 'custom', position: { x: 1240, y: 430 }, data: { label: 'Compliance Bot', subLabel: 'Configured · 0 calls', isGhost: true } },
+  ],
+}
+
+const buildTimeExtraChildEdges: Record<string, any[]> = {
+  toolsMore: [
+    { id: 'e-cfg-dyn', source: 'tool-more', target: 'cfg-dynamics', type: 'default' },
+    { id: 'e-cfg-wea', source: 'tool-more', target: 'cfg-weather', type: 'default' },
+  ],
+  sites: [
+    { id: 'e-cfg-dv', source: 'sites', target: 'cfg-dataverse', type: 'default' },
+  ],
+  agents: [
+    { id: 'e-cfg-cb', source: 'agents', target: 'cfg-compbot', type: 'default' },
+  ],
 }
 
 const usersPanelRows = (groupChildren.users ?? []).map((node: any, index: number) => {
@@ -219,9 +318,19 @@ function getDescendantGroups(groupId: string): string[] {
     }, [])
 }
 
-function getActivitiesGraphData(expandedGroups: string[]) {
+type GraphViewMode = 'active' | 'configured' | 'both'
+
+function getActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMode = 'active') {
+    const showConfigured = viewMode === 'configured' || viewMode === 'both'
+
     const nodes = [...graphNodes]
     const edges = [...graphEdges]
+
+    // Add build-time top-level ghost nodes (Connections, Triggers)
+    if (showConfigured) {
+      nodes.push(...buildTimeTopNodes)
+      edges.push(...buildTimeTopEdges)
+    }
 
     expandedGroups.forEach((groupId) => {
         if (groupChildren[groupId]) {
@@ -230,8 +339,19 @@ function getActivitiesGraphData(expandedGroups: string[]) {
         if (groupChildEdges[groupId]) {
             edges.push(...groupChildEdges[groupId])
         }
+        // Build-time group children (Connections, Triggers)
+        if (showConfigured && buildTimeGroupChildren[groupId]) {
+          nodes.push(...buildTimeGroupChildren[groupId])
+          edges.push(...(buildTimeGroupChildEdges[groupId] ?? []))
+        }
+        // Ghost additions to existing runtime groups
+        if (showConfigured && buildTimeExtraChildren[groupId]) {
+          nodes.push(...buildTimeExtraChildren[groupId])
+          edges.push(...(buildTimeExtraChildEdges[groupId] ?? []))
+        }
     })
 
+    const ghostNodeIds = new Set(nodes.filter((n: any) => !!n?.data?.isGhost).map((n: any) => n.id))
     const riskNodeIds = new Set(
         nodes
             .filter((node: any) => !!node?.data?.isRisk)
@@ -239,7 +359,19 @@ function getActivitiesGraphData(expandedGroups: string[]) {
     )
 
     const styledEdges = edges.map((edge: any) => {
-        const isRiskTarget = riskNodeIds.has(edge.target)
+        const isGhostTarget = ghostNodeIds.has(edge.target)
+        const isGhostSource = ghostNodeIds.has(edge.source)
+        const isGhostEdge = isGhostTarget || isGhostSource
+        const isRiskTarget = riskNodeIds.has(edge.target) && !isGhostEdge
+
+        // Configured-only mode: neutral architecture view
+        if (viewMode === 'configured') {
+          return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: isGhostEdge ? '#C8C6C4' : '#B3B3B3', strokeDasharray: isGhostEdge ? '6,4' : undefined, opacity: isGhostEdge ? 0.5 : 0.7 } }
+        }
+        // Ghost edges: dashed, muted
+        if (isGhostEdge) {
+          return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: '#B3B3B3', strokeDasharray: '6,4', opacity: 0.5 } }
+        }
         return {
             ...edge,
             animated: isRiskTarget,
@@ -250,7 +382,7 @@ function getActivitiesGraphData(expandedGroups: string[]) {
         }
     })
 
-    return { nodes, edges: styledEdges }
+    return { nodes: applyDagreLayout(nodes, styledEdges), edges: styledEdges }
 }
 
 function getNodeDetailModel(node: any) {
@@ -258,6 +390,7 @@ function getNodeDetailModel(node: any) {
     const label = node?.data?.label ?? 'Node'
     const subLabel = node?.data?.subLabel ?? '-'
     const isRisk = !!node?.data?.isRisk
+    const isGhost = !!node?.data?.isGhost
 
     if (id.startsWith('user-')) {
         return {
@@ -301,17 +434,61 @@ function getNodeDetailModel(node: any) {
         }
     }
 
-    if (id.startsWith('agent-')) {
+    if (id.startsWith('agent-') || id === 'cfg-compbot') {
         return {
             title: label,
             category: 'Agent',
-            summary: 'Connected downstream agent in the activity chain.',
+            summary: isGhost ? 'Configured downstream agent — not invoked at runtime.' : 'Connected downstream agent in the activity chain.',
             items: [
                 { label: 'Agent name', value: label },
                 { label: 'Usage', value: subLabel },
                 { label: 'Branch', value: 'Agents' },
+                ...(isGhost ? [{ label: 'Status', value: 'Configured only (build-time)' }] : []),
             ],
-            status: isRisk ? 'Potential risk' : 'Monitored',
+            status: isRisk ? 'Potential risk' : isGhost ? 'Configured · unused' : 'Monitored',
+        }
+    }
+
+    if (id.startsWith('conn-')) {
+        return {
+            title: label,
+            category: 'Connection',
+            summary: isRisk ? 'Configured connection with an authentication risk.' : 'Configured connection to an external service.',
+            items: [
+                { label: 'Connection', value: label },
+                { label: 'Service', value: subLabel },
+                { label: 'Source', value: 'Build-time configuration' },
+                ...(isRisk ? [{ label: 'Risk', value: 'Missing modern authentication' }] : []),
+            ],
+            status: isRisk ? 'Authentication risk' : 'Configured',
+        }
+    }
+
+    if (id.startsWith('trigger-')) {
+        return {
+            title: label,
+            category: 'Trigger',
+            summary: 'Configured automation trigger that can invoke this agent.',
+            items: [
+                { label: 'Trigger', value: label },
+                { label: 'Platform', value: subLabel },
+                { label: 'Source', value: 'Build-time configuration' },
+            ],
+            status: 'Configured',
+        }
+    }
+
+    if (id.startsWith('cfg-')) {
+        return {
+            title: label,
+            category: 'Configured Resource',
+            summary: 'This resource is configured but has not been invoked at runtime. Unused resources expand the agent\'s attack surface.',
+            items: [
+                { label: 'Resource', value: label },
+                { label: 'Details', value: subLabel },
+                { label: 'Runtime activity', value: 'None detected' },
+            ],
+            status: 'Unused · review needed',
         }
     }
 
@@ -328,6 +505,7 @@ function getNodeDetailModel(node: any) {
 }
 
 function ActivitiesContent() {
+    const [graphViewMode, setGraphViewMode] = useState<GraphViewMode>('both')
     const [showLeftPanel, setShowLeftPanel] = useState(false)
     const [showRightPanel, setShowRightPanel] = useState(false)
     const [detailPanelWidth, setDetailPanelWidth] = useState(520)
@@ -335,20 +513,21 @@ function ActivitiesContent() {
     const containerRef = useRef<HTMLDivElement | null>(null)
         const [expandedGroups, setExpandedGroups] = useState<string[]>([])
         const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
-        const initialGraphData = getActivitiesGraphData([])
+        const initialGraphData = getActivitiesGraphData([], graphViewMode)
         const [nodes, setNodes, onNodesChange] = useNodesState(initialGraphData.nodes as any);
         const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraphData.edges);
   const [selectedActivity, setSelectedActivity] = useState(1);
       const [selectedNode, setSelectedNode] = useState<any>(null)
     const [lastClickedNodeId, setLastClickedNodeId] = useState<string | null>(null)
         const [selectedUsersPanelRow, setSelectedUsersPanelRow] = useState<any | null>(null)
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: any } | null>(null)
 
           const selectedNodeDetails = selectedNode ? getNodeDetailModel(selectedNode) : null
                     const isUsersSummaryNode = selectedNode?.id === 'users'
                                         const isUsersRowDetailView = isUsersSummaryNode && !!selectedUsersPanelRow
 
         useEffect(() => {
-            const nextGraphData = getActivitiesGraphData(expandedGroups)
+            const nextGraphData = getActivitiesGraphData(expandedGroups, graphViewMode)
             const highlightedNodes = (nextGraphData.nodes as any[]).map((node: any) => ({
                 ...node,
                 data: {
@@ -359,7 +538,7 @@ function ActivitiesContent() {
 
             setNodes(highlightedNodes as any)
             setEdges(nextGraphData.edges as any)
-        }, [expandedGroups, lastClickedNodeId, setNodes, setEdges])
+        }, [expandedGroups, lastClickedNodeId, graphViewMode, setNodes, setEdges])
 
         useEffect(() => {
             if (!reactFlowInstance) {
@@ -509,6 +688,48 @@ function ActivitiesContent() {
                                 Show activities
                             </button>
                         )}
+
+                        {/* Graph View Mode Toggle */}
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                          {([
+                            { key: 'active' as GraphViewMode, label: 'Active only', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#0078D4" /></svg> },
+                            { key: 'both' as GraphViewMode, label: 'Both', icon: <svg width="12" height="12" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#0078D4" strokeWidth="1.5" /><path d="M7 1.5A5.5 5.5 0 0 1 7 12.5" fill="#0078D4" /></svg> },
+                            { key: 'configured' as GraphViewMode, label: 'Configured', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#8A8886" strokeWidth="1.5" strokeDasharray="3,2" /></svg> },
+                          ]).map(({ key, label, icon }) => (
+                            <button
+                              key={key}
+                              onClick={() => setGraphViewMode(key)}
+                              className={`px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                                graphViewMode === key
+                                  ? 'bg-[#0078D4] text-white'
+                                  : 'text-[#616161] hover:bg-gray-50'
+                              }`}
+                            >
+                              {graphViewMode !== key && icon}
+                              {graphViewMode === key && <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="white" /></svg>}
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Ghost node legend */}
+                        {graphViewMode !== 'active' && (
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+                            <div className="flex items-center gap-2 text-[11px] text-[#242424]">
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-[#0078D4] bg-white" />
+                              <span>Active (runtime)</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-dashed border-[#8A8886] bg-[#FAF9F8] opacity-60" />
+                              <span>Configured only</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
+                              <svg width="24" height="2"><line x1="0" y1="1" x2="24" y2="1" stroke="#B3B3B3" strokeWidth="2" strokeDasharray="4,3" /></svg>
+                              <span>Configured link</span>
+                            </div>
+                          </div>
+                        )}
+
                         {!showRightPanel && (
                             <button
                                 className="absolute top-3 right-3 z-20 px-2 py-1 text-[11px] rounded border border-gray-300 bg-white text-[#242424] hover:bg-gray-50"
@@ -524,11 +745,11 @@ function ActivitiesContent() {
               onEdgesChange={onEdgesChange}
                             onInit={setReactFlowInstance}
                             onNodeClick={(_, node) => {
+                                setContextMenu(null)
                                 setLastClickedNodeId(node?.id ?? null)
 
                                 if (node?.id !== '1') {
                                     setSelectedNode(node)
-                                    setShowRightPanel(true)
                                 }
 
                                 if (node?.data?.expandable && node?.data?.groupId) {
@@ -540,6 +761,21 @@ function ActivitiesContent() {
                                         return [...previous, node.data.groupId]
                                     })
                                 }
+                            }}
+                            onNodeContextMenu={(event, node) => {
+                              event.preventDefault()
+                              if (node?.id === '1') return
+                              setLastClickedNodeId(node?.id ?? null)
+                              setSelectedNode(node)
+                              const bounds = containerRef.current?.getBoundingClientRect()
+                              setContextMenu({
+                                x: event.clientX - (bounds?.left ?? 0),
+                                y: event.clientY - (bounds?.top ?? 0),
+                                node,
+                              })
+                            }}
+                            onPaneClick={() => {
+                              setContextMenu(null)
                             }}
               nodeTypes={nodeTypes}
               fitView
@@ -561,6 +797,45 @@ function ActivitiesContent() {
                     className="!bg-white !shadow-sm !border !border-gray-200"
                 />
             </ReactFlow>
+
+            {/* Context Menu */}
+            {contextMenu && (
+              <div
+                className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+                style={{ left: contextMenu.x, top: contextMenu.y }}
+              >
+                <button
+                  className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+                  onClick={() => {
+                    setSelectedNode(contextMenu.node)
+                    setShowRightPanel(true)
+                    setContextMenu(null)
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><circle cx="10" cy="10" r="8"/><path d="M9.5 6h1v5h-1V6Zm0 6h1v1h-1v-1Z"/></svg>
+                  View details
+                </button>
+                {contextMenu.node?.data?.expandable && (
+                  <button
+                    className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+                    onClick={() => {
+                      const groupId = contextMenu.node?.data?.groupId
+                      if (groupId) {
+                        setExpandedGroups((prev) =>
+                          prev.includes(groupId)
+                            ? prev.filter((g) => g !== groupId && !getDescendantGroups(groupId).includes(g))
+                            : [...prev, groupId]
+                        )
+                      }
+                      setContextMenu(null)
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><path d="M3 10h14M10 3v14"/></svg>
+                    {expandedGroups.includes(contextMenu.node?.data?.groupId) ? 'Collapse group' : 'Expand group'}
+                  </button>
+                )}
+              </div>
+            )}
         </div>
 
         {showRightPanel && (

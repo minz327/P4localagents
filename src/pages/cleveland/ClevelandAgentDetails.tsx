@@ -9,8 +9,36 @@ import ReactFlow, {
   Handle,
   Position
 } from 'react-flow-renderer'
+import dagre from 'dagre'
 import { rows } from '../../lib/agentsData'
-import { getEnrichment, getRecentActivities, AgentEnrichment, mockAnomalies } from '../../lib/clevelandData'
+import { getEnrichment, getRecentActivities, AgentEnrichment, mockAnomalies, spikeAgents } from '../../lib/clevelandData'
+
+// --- Dagre auto-layout helper ---
+const NODE_WIDTH = 140
+const NODE_HEIGHT = 80
+
+function applyDagreLayout(nodes: any[], edges: any[]) {
+  const g = new dagre.graphlib.Graph()
+  g.setDefaultEdgeLabel(() => ({}))
+  g.setGraph({ rankdir: 'TB', ranksep: 100, nodesep: 60, marginx: 40, marginy: 40 })
+
+  nodes.forEach((node: any) => {
+    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
+  })
+  edges.forEach((edge: any) => {
+    g.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(g)
+
+  return nodes.map((node: any) => {
+    const pos = g.node(node.id)
+    return {
+      ...node,
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+    }
+  })
+}
 
 /*
  * Proposal Agent Detail — Enhanced with:
@@ -30,11 +58,16 @@ const CustomNode = ({ data }: { data: any }) => {
         ? 'ring-[#0078D4]'
         : 'ring-gray-400'
 
+  const isGhost = !!data.isGhost
+
   return (
-    <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''}`}>
+    <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''} ${isGhost ? 'opacity-60' : ''}`}>
       <div className={`relative w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white
+        ${isGhost ? 'border-dashed' : ''}
         ${data.isLastClicked ? `ring-4 ${inheritedRingColorClass} ring-offset-2 ring-offset-white animate-pulse` : ''}
         ${isRoot ? 'border-[#0078D4]' :
+          isGhost && data.isRisk ? 'border-[#C50F1F] bg-red-50' :
+          isGhost ? 'border-[#8A8886] bg-[#FAF9F8]' :
           data.isRisk ? 'border-[#C50F1F] bg-red-50' :
             hasCount ? 'border-[#0078D4] bg-[#EBF3FC]' : 'border-gray-300'}`}>
         {data.countBadge && (
@@ -70,12 +103,59 @@ const proposalNodeTypes = { custom: CustomNode }
 // --- Graph Data ---
 const knowledgeSourceCount = 1
 const sharePointSensitiveFiles = [
-  { id: 'file-1', name: 'Payroll-Q4.xlsx', isRisk: true },
-  { id: 'file-2', name: 'CompPlan-2026.docx', isRisk: true },
-  { id: 'file-3', name: 'M&A-Notes.pdf', isRisk: false },
-  { id: 'file-4', name: 'Board-Draft.pptx', isRisk: false },
-  { id: 'file-5', name: 'Customer-PII.csv', isRisk: false },
+  { id: 'file-1', name: 'Payroll-Q4.xlsx', isRisk: true, sensitivity: 'Highly Confidential', path: '/HR-Confidential/', size: '2.4 MB', lastAccessed: 'Mar 3, 2026 2:02 PM' },
+  { id: 'file-2', name: 'Employee-SSN-Master.csv', isRisk: true, sensitivity: 'Highly Confidential – PII', path: '/HR-Confidential/', size: '1.1 MB', lastAccessed: 'Mar 3, 2026 2:05 PM' },
+  { id: 'file-3', name: 'CompPlan-2026.docx', isRisk: true, sensitivity: 'Highly Confidential', path: '/HR-Confidential/', size: '890 KB', lastAccessed: 'Mar 3, 2026 2:08 PM' },
+  { id: 'file-4', name: 'Board-Materials-Q1.pptx', isRisk: true, sensitivity: 'Confidential', path: '/Executive/', size: '4.2 MB', lastAccessed: 'Mar 3, 2026 2:12 PM' },
+  { id: 'file-5', name: 'M&A-Notes.pdf', isRisk: false, sensitivity: 'Confidential', path: '/Executive/', size: '1.8 MB', lastAccessed: 'Mar 3, 2026 2:15 PM' },
+  { id: 'file-6', name: 'Customer-PII.csv', isRisk: false, sensitivity: 'Confidential', path: '/Sales/', size: '3.1 MB', lastAccessed: 'Mar 3, 2026 2:18 PM' },
+  { id: 'file-7', name: 'Vendor-Contracts.zip', isRisk: false, sensitivity: 'Internal', path: '/Legal/', size: '12 MB', lastAccessed: 'Mar 3, 2026 2:20 PM' },
 ]
+const sharePointMoreFiles = [
+  { id: 'file-8', name: 'HR-Onboarding.docx', isRisk: false, sensitivity: 'Internal', path: '/HR/', size: '450 KB', lastAccessed: 'Mar 3, 2026 2:22 PM' },
+  { id: 'file-9', name: 'Travel-Expenses-Q4.xlsx', isRisk: false, sensitivity: 'Internal', path: '/Finance/', size: '780 KB', lastAccessed: 'Mar 3, 2026 2:24 PM' },
+  { id: 'file-10', name: 'Benefits-Summary.pdf', isRisk: false, sensitivity: 'Internal', path: '/HR/', size: '320 KB', lastAccessed: 'Mar 3, 2026 2:26 PM' },
+  { id: 'file-11', name: 'Q4-Revenue-Draft.xlsx', isRisk: false, sensitivity: 'Internal', path: '/Finance/', size: '1.2 MB', lastAccessed: 'Mar 3, 2026 2:28 PM' },
+  { id: 'file-12', name: 'Team-Roster-2026.csv', isRisk: false, sensitivity: 'Standard', path: '/HR/', size: '95 KB', lastAccessed: 'Mar 3, 2026 2:30 PM' },
+  { id: 'file-13', name: 'Meeting-Notes-Mar.docx', isRisk: false, sensitivity: 'Standard', path: '/General/', size: '210 KB', lastAccessed: 'Mar 3, 2026 2:32 PM' },
+  { id: 'file-14', name: 'Project-Timeline.pptx', isRisk: false, sensitivity: 'Standard', path: '/General/', size: '1.5 MB', lastAccessed: 'Mar 3, 2026 2:34 PM' },
+  { id: 'file-15', name: 'Org-Chart-Draft.pptx', isRisk: false, sensitivity: 'Standard', path: '/HR/', size: '680 KB', lastAccessed: 'Mar 3, 2026 2:36 PM' },
+]
+const allSharePointFiles = [...sharePointSensitiveFiles, ...sharePointMoreFiles]
+
+// File-level activity data for enriched detail panel
+const fileActivityData: Record<string, { users: { name: string; initials: string; action: string; time: string; bg: string }[]; activities: { type: 'sensitive' | 'normal'; title: string; detail: string; time: string }[] }> = {
+  'file-1': {
+    users: [
+      { name: 'Riley Chen', initials: 'RC', action: 'Emailed externally', time: '2:02 PM', bg: 'bg-[#5B73E8]' },
+      { name: 'Morgan Lee', initials: 'ML', action: 'Viewed', time: '1:58 PM', bg: 'bg-[#C3008F]' },
+    ],
+    activities: [
+      { type: 'sensitive', title: 'Emailed to external recipient', detail: 'external-audit@partnerfirm.com', time: 'Mar 3, 2:02 PM' },
+      { type: 'normal', title: 'File accessed (read)', detail: 'SharePoint HR-Confidential', time: 'Mar 3, 1:58 PM' },
+    ],
+  },
+  'file-2': {
+    users: [
+      { name: 'Riley Chen', initials: 'RC', action: 'Emailed externally', time: '2:05 PM', bg: 'bg-[#5B73E8]' },
+    ],
+    activities: [
+      { type: 'sensitive', title: 'Emailed to external recipient', detail: 'external-audit@partnerfirm.com', time: 'Mar 3, 2:05 PM' },
+      { type: 'sensitive', title: 'Data aggregated with Payroll-Q4', detail: 'Cross-file PII merge', time: 'Mar 3, 2:03 PM' },
+    ],
+  },
+  'file-3': {
+    users: [
+      { name: 'Riley Chen', initials: 'RC', action: 'Emailed externally', time: '2:08 PM', bg: 'bg-[#5B73E8]' },
+      { name: 'Jordan Patel', initials: 'JP', action: 'Viewed', time: '1:45 PM', bg: 'bg-[#00B7C3]' },
+    ],
+    activities: [
+      { type: 'sensitive', title: 'Emailed to external recipient', detail: 'external-audit@partnerfirm.com', time: 'Mar 3, 2:08 PM' },
+      { type: 'normal', title: 'File accessed (read)', detail: 'SharePoint HR-Confidential', time: 'Mar 3, 1:45 PM' },
+    ],
+  },
+}
+
 const knowledgeSensitiveCount = sharePointSensitiveFiles.filter(f => f.isRisk).length
 const knowledgeBranchHasRisk = knowledgeSensitiveCount > 0
 
@@ -88,10 +168,10 @@ const proposalGraphNodes: any[] = [
 ]
 
 const proposalGraphEdges: any[] = [
-  { id: 'e1-users', source: '1', target: 'users', type: 'smoothstep' },
-  { id: 'e1-sites', source: '1', target: 'sites', type: 'smoothstep', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-  { id: 'e1-tools', source: '1', target: 'tools', type: 'smoothstep' },
-  { id: 'e1-agents', source: '1', target: 'agents', type: 'smoothstep', animated: true, style: { stroke: '#C50F1F' } },
+  { id: 'e1-users', source: '1', target: 'users', type: 'default' },
+  { id: 'e1-sites', source: '1', target: 'sites', type: 'default', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+  { id: 'e1-tools', source: '1', target: 'tools', type: 'default' },
+  { id: 'e1-agents', source: '1', target: 'agents', type: 'default', animated: true, style: { stroke: '#C50F1F' } },
 ]
 
 const proposalGroupChildren: Record<string, any[]> = {
@@ -101,10 +181,16 @@ const proposalGroupChildren: Record<string, any[]> = {
     { id: 'user-3', type: 'custom', position: { x: 250, y: 430 }, data: { label: 'Jordan Patel', subLabel: 'Admin', avatarInitials: 'JP' } },
   ],
   sites: [
-    { id: 'site-1', type: 'custom', position: { x: 340, y: 430 }, data: { label: 'SharePoint', subLabel: 'Sensitive files', isRisk: knowledgeBranchHasRisk, countBadge: knowledgeSensitiveCount > 0 ? `+${knowledgeSensitiveCount}` : undefined, expandable: true, groupId: 'siteFiles' } },
+    { id: 'site-1', type: 'custom', position: { x: 340, y: 430 }, data: { label: 'SharePoint', subLabel: '15 files accessed', isRisk: knowledgeBranchHasRisk, countBadge: '+15', expandable: true, groupId: 'siteFiles' } },
   ],
-  siteFiles: sharePointSensitiveFiles.map((file, index) => ({
-    id: file.id, type: 'custom', position: { x: 40 + (index * 120), y: 670 }, data: { label: file.name, isRisk: file.isRisk },
+  siteFiles: [
+    ...sharePointSensitiveFiles.map((file, index) => ({
+      id: file.id, type: 'custom', position: { x: 40 + (index * 120), y: 670 }, data: { label: file.name, isRisk: file.isRisk, subLabel: file.sensitivity },
+    })),
+    { id: 'file-more', type: 'custom', position: { x: 40 + (sharePointSensitiveFiles.length * 120), y: 670 }, data: { label: 'More files', countBadge: `+${sharePointMoreFiles.length}`, expandable: true, groupId: 'siteFilesMore' } },
+  ],
+  siteFilesMore: sharePointMoreFiles.map((file, index) => ({
+    id: file.id, type: 'custom', position: { x: 40 + (index * 120), y: 870 }, data: { label: file.name, isRisk: file.isRisk, subLabel: file.sensitivity },
   })),
   tools: [
     { id: 'tool-1', type: 'custom', position: { x: 470, y: 430 }, data: { label: 'Microsoft Word' } },
@@ -133,48 +219,117 @@ const proposalGroupChildren: Record<string, any[]> = {
 
 const proposalGroupChildEdges: Record<string, any[]> = {
   users: [
-    { id: 'e-users-1', source: 'users', target: 'user-1', type: 'smoothstep' },
-    { id: 'e-users-2', source: 'users', target: 'user-2', type: 'smoothstep' },
-    { id: 'e-users-3', source: 'users', target: 'user-3', type: 'smoothstep' },
+    { id: 'e-users-1', source: 'users', target: 'user-1', type: 'default' },
+    { id: 'e-users-2', source: 'users', target: 'user-2', type: 'default' },
+    { id: 'e-users-3', source: 'users', target: 'user-3', type: 'default' },
   ],
   sites: [
-    { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
   ],
   siteFiles: [
-    { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    ...sharePointSensitiveFiles.map((file) => ({
+      id: `e-site-${file.id}`, source: 'site-1', target: file.id, type: 'default', style: file.isRisk ? { stroke: '#C50F1F' } : undefined,
+    })),
+    { id: 'e-site-file-more', source: 'site-1', target: 'file-more', type: 'default' },
   ],
+  siteFilesMore: sharePointMoreFiles.map((file) => ({
+    id: `e-more-${file.id}`, source: 'file-more', target: file.id, type: 'default',
+  })),
   tools: [
-    { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'smoothstep' },
-    { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'smoothstep' },
-    { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'smoothstep' },
-    { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'smoothstep' },
+    { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'default' },
+    { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'default' },
+    { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'default' },
+    { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'default' },
   ],
   toolsMore: [
-    { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'smoothstep' },
-    { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'smoothstep' },
-    { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'smoothstep' },
-    { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'smoothstep' },
-    { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'smoothstep' },
-    { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'smoothstep' },
-    { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'smoothstep' },
-    { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'smoothstep' },
-    { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'smoothstep' },
-    { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'smoothstep' },
+    { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'default' },
+    { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'default' },
+    { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'default' },
+    { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'default' },
+    { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'default' },
+    { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'default' },
+    { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'default' },
+    { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'default' },
+    { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'default' },
+    { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'default' },
   ],
   agents: [
-    { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-    { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'smoothstep', style: { stroke: '#C50F1F' } },
-    { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'smoothstep', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'default', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'default', style: { stroke: '#C50F1F' } },
+    { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'default', style: { stroke: '#C50F1F' } },
   ],
 }
 
 const proposalGroupHierarchy: Record<string, string[]> = {
   sites: ['siteFiles'],
+  siteFiles: ['siteFilesMore'],
   tools: ['toolsMore'],
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD-TIME CONFIGURATION LAYER
+// Resources configured on the agent but not necessarily invoked at runtime.
+// Shown as "ghost" nodes with dashed borders in the unified graph.
+// ══════════════════════════════════════════════════════════
+
+const buildTimeTopNodes: any[] = [
+  { id: 'connections', type: 'custom', position: { x: 1160, y: 220 }, data: { label: 'Connections', subLabel: '4 configured', countBadge: '+4', isGhost: true, expandable: true, groupId: 'connections' } },
+  { id: 'triggers', type: 'custom', position: { x: 1380, y: 220 }, data: { label: 'Triggers', subLabel: '1 flow', countBadge: '+1', isGhost: true, expandable: true, groupId: 'triggers' } },
+]
+
+const buildTimeTopEdges: any[] = [
+  { id: 'e1-conn', source: '1', target: 'connections', type: 'default' },
+  { id: 'e1-trig', source: '1', target: 'triggers', type: 'default' },
+]
+
+const buildTimeGroupChildren: Record<string, any[]> = {
+  connections: [
+    { id: 'conn-1', type: 'custom', position: { x: 1020, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'Office 365 Users', isGhost: true } },
+    { id: 'conn-2', type: 'custom', position: { x: 1160, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'SharePoint', isGhost: true } },
+    { id: 'conn-3', type: 'custom', position: { x: 1300, y: 430 }, data: { label: 'svc-account', subLabel: 'SQL Server', isGhost: true } },
+    { id: 'conn-4', type: 'custom', position: { x: 1440, y: 430 }, data: { label: 'legacy-api-key', subLabel: 'No auth ⚠️', isGhost: true, isRisk: true } },
+  ],
+  triggers: [
+    { id: 'trigger-1', type: 'custom', position: { x: 1380, y: 430 }, data: { label: 'New email arrives', subLabel: 'Power Automate', isGhost: true } },
+  ],
+}
+
+const buildTimeGroupChildEdges: Record<string, any[]> = {
+  connections: [
+    { id: 'e-conn-1', source: 'connections', target: 'conn-1', type: 'default' },
+    { id: 'e-conn-2', source: 'connections', target: 'conn-2', type: 'default' },
+    { id: 'e-conn-3', source: 'connections', target: 'conn-3', type: 'default' },
+    { id: 'e-conn-4', source: 'connections', target: 'conn-4', type: 'default' },
+  ],
+  triggers: [
+    { id: 'e-trigger-1', source: 'triggers', target: 'trigger-1', type: 'default' },
+  ],
+}
+
+const buildTimeExtraChildren: Record<string, any[]> = {
+  toolsMore: [
+    { id: 'cfg-dynamics', type: 'custom', position: { x: 1260, y: 670 }, data: { label: 'Dynamics 365', subLabel: 'Configured · unused', isGhost: true } },
+    { id: 'cfg-weather', type: 'custom', position: { x: 1400, y: 670 }, data: { label: 'MSN Weather', subLabel: 'Configured · unused', isGhost: true } },
+  ],
+  sites: [
+    { id: 'cfg-dataverse', type: 'custom', position: { x: 500, y: 430 }, data: { label: 'Dataverse', subLabel: 'Configured · not accessed', isGhost: true } },
+  ],
+  agents: [
+    { id: 'cfg-compbot', type: 'custom', position: { x: 1240, y: 430 }, data: { label: 'Compliance Bot', subLabel: 'Configured · 0 calls', isGhost: true } },
+  ],
+}
+
+const buildTimeExtraChildEdges: Record<string, any[]> = {
+  toolsMore: [
+    { id: 'e-cfg-dyn', source: 'tool-more', target: 'cfg-dynamics', type: 'default' },
+    { id: 'e-cfg-wea', source: 'tool-more', target: 'cfg-weather', type: 'default' },
+  ],
+  sites: [
+    { id: 'e-cfg-dv', source: 'sites', target: 'cfg-dataverse', type: 'default' },
+  ],
+  agents: [
+    { id: 'e-cfg-cb', source: 'agents', target: 'cfg-compbot', type: 'default' },
+  ],
 }
 
 const proposalUsersPanelRows = (proposalGroupChildren.users ?? []).map((node: any, index: number) => {
@@ -203,19 +358,54 @@ function getProposalDescendantGroups(groupId: string): string[] {
   }, [])
 }
 
-function getProposalActivitiesGraphData(expandedGroups: string[]) {
+type GraphViewMode = 'active' | 'configured' | 'both'
+
+function getProposalActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMode = 'active') {
+  const showConfigured = viewMode === 'configured' || viewMode === 'both'
+
   const nodes = [...proposalGraphNodes]
   const edges = [...proposalGraphEdges]
+
+  // Add build-time top-level ghost nodes (Connections, Triggers)
+  if (showConfigured) {
+    nodes.push(...buildTimeTopNodes)
+    edges.push(...buildTimeTopEdges)
+  }
+
   expandedGroups.forEach((groupId) => {
     if (proposalGroupChildren[groupId]) nodes.push(...proposalGroupChildren[groupId])
     if (proposalGroupChildEdges[groupId]) edges.push(...proposalGroupChildEdges[groupId])
+    // Build-time group children (Connections, Triggers)
+    if (showConfigured && buildTimeGroupChildren[groupId]) {
+      nodes.push(...buildTimeGroupChildren[groupId])
+      edges.push(...(buildTimeGroupChildEdges[groupId] ?? []))
+    }
+    // Ghost additions to existing runtime groups
+    if (showConfigured && buildTimeExtraChildren[groupId]) {
+      nodes.push(...buildTimeExtraChildren[groupId])
+      edges.push(...(buildTimeExtraChildEdges[groupId] ?? []))
+    }
   })
+
+  const ghostNodeIds = new Set(nodes.filter((n: any) => !!n?.data?.isGhost).map((n: any) => n.id))
   const riskNodeIds = new Set(nodes.filter((n: any) => !!n?.data?.isRisk).map((n: any) => n.id))
   const styledEdges = edges.map((edge: any) => {
-    const isRiskTarget = riskNodeIds.has(edge.target)
+    const isGhostTarget = ghostNodeIds.has(edge.target)
+    const isGhostSource = ghostNodeIds.has(edge.source)
+    const isGhostEdge = isGhostTarget || isGhostSource
+    const isRiskTarget = riskNodeIds.has(edge.target) && !isGhostEdge
+
+    // Configured-only mode: neutral architecture view
+    if (viewMode === 'configured') {
+      return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: isGhostEdge ? '#C8C6C4' : '#B3B3B3', strokeDasharray: isGhostEdge ? '6,4' : undefined, opacity: isGhostEdge ? 0.5 : 0.7 } }
+    }
+    // Ghost edges: dashed, muted
+    if (isGhostEdge) {
+      return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: '#B3B3B3', strokeDasharray: '6,4', opacity: 0.5 } }
+    }
     return { ...edge, animated: isRiskTarget, style: { ...(edge.style ?? {}), stroke: isRiskTarget ? '#C50F1F' : '#B3B3B3' } }
   })
-  return { nodes, edges: styledEdges }
+  return { nodes: applyDagreLayout(nodes, styledEdges), edges: styledEdges }
 }
 
 function getProposalNodeDetailModel(node: any) {
@@ -223,10 +413,34 @@ function getProposalNodeDetailModel(node: any) {
   const label = node?.data?.label ?? 'Node'
   const subLabel = node?.data?.subLabel ?? '-'
   const isRisk = !!node?.data?.isRisk
+  const isGhost = !!node?.data?.isGhost
   if (id.startsWith('user-')) return { title: label, category: 'User', summary: 'User activity connected to this agent execution path.', items: [{ label: 'Name', value: label }, { label: 'Role', value: subLabel }, { label: 'Source', value: 'Users branch' }], status: isRisk ? 'Potential risk' : 'Monitored' }
-  if (id.startsWith('file-')) return { title: label, category: 'File', summary: 'File surfaced from knowledge source activity.', items: [{ label: 'File name', value: label }, { label: 'Repository', value: 'SharePoint' }, { label: 'Sensitivity', value: isRisk ? 'Sensitive' : 'Standard' }], status: isRisk ? 'Potential risk' : 'Monitored' }
+  if (id.startsWith('file-') && !id.includes('more')) {
+    const fileData = allSharePointFiles.find(f => f.id === id)
+    const activities = fileActivityData[id]
+    return {
+      title: label,
+      category: 'File',
+      summary: isRisk ? 'This file was emailed to an external recipient during the exfiltration spike.' : 'File accessed by this agent from SharePoint.',
+      items: [
+        { label: 'File name', value: label },
+        { label: 'Repository', value: 'SharePoint' },
+        { label: 'Path', value: fileData?.path ?? '/SharePoint/' },
+        { label: 'Sensitivity', value: fileData?.sensitivity ?? (isRisk ? 'Sensitive' : 'Standard') },
+        { label: 'Size', value: fileData?.size ?? '—' },
+        { label: 'Last accessed', value: fileData?.lastAccessed ?? '—' },
+      ],
+      status: isRisk ? 'Potential risk' : 'Monitored',
+      users: activities?.users,
+      activities: activities?.activities,
+      hasEnrichedPanel: true,
+    }
+  }
   if (id.startsWith('tool-')) return { title: label, category: 'Tool', summary: 'Tool invoked by this agent during activity execution.', items: [{ label: 'Tool', value: label }, { label: 'Family', value: 'Microsoft 365' }, { label: 'Type', value: 'Productivity tool' }], status: isRisk ? 'Potential risk' : 'Monitored' }
-  if (id.startsWith('agent-')) return { title: label, category: 'Agent', summary: 'Connected downstream agent in the activity chain.', items: [{ label: 'Agent name', value: label }, { label: 'Usage', value: subLabel }, { label: 'Branch', value: 'Agents' }], status: isRisk ? 'Potential risk' : 'Monitored' }
+  if (id.startsWith('agent-') || id === 'cfg-compbot') return { title: label, category: 'Agent', summary: isGhost ? 'Configured downstream agent — not invoked at runtime.' : 'Connected downstream agent in the activity chain.', items: [{ label: 'Agent name', value: label }, { label: 'Usage', value: subLabel }, { label: 'Branch', value: 'Agents' }, ...(isGhost ? [{ label: 'Status', value: 'Configured only (build-time)' }] : [])], status: isRisk ? 'Potential risk' : isGhost ? 'Configured · unused' : 'Monitored' }
+  if (id.startsWith('conn-')) return { title: label, category: 'Connection', summary: isRisk ? 'Configured connection with an authentication risk.' : 'Configured connection to an external service.', items: [{ label: 'Connection', value: label }, { label: 'Service', value: subLabel }, { label: 'Source', value: 'Build-time configuration' }, ...(isRisk ? [{ label: 'Risk', value: 'Missing modern authentication' }] : [])], status: isRisk ? 'Authentication risk' : 'Configured' }
+  if (id.startsWith('trigger-')) return { title: label, category: 'Trigger', summary: 'Configured automation trigger that can invoke this agent.', items: [{ label: 'Trigger', value: label }, { label: 'Platform', value: subLabel }, { label: 'Source', value: 'Build-time configuration' }], status: 'Configured' }
+  if (id.startsWith('cfg-')) return { title: label, category: 'Configured Resource', summary: 'This resource is configured but has not been invoked at runtime. Unused resources expand the agent\'s attack surface.', items: [{ label: 'Resource', value: label }, { label: 'Details', value: subLabel }, { label: 'Runtime activity', value: 'None detected' }], status: 'Unused · review needed' }
   return { title: label, category: 'Node', summary: 'Selected graph node details.', items: [{ label: 'Label', value: label }, { label: 'Details', value: subLabel }], status: isRisk ? 'Potential risk' : 'Monitored' }
 }
 
@@ -323,50 +537,130 @@ function ResourceContextSection({ enrichment }: { enrichment: AgentEnrichment })
   )
 }
 
-function ActivitiesContent() {
-  const [showLeftPanel, setShowLeftPanel] = useState(false)
+interface InvestigationContext {
+  riskType: string
+  delta: string
+  message: string
+  detectedAgo: string
+  destination: string
+  affectedFiles: { id: string; name: string; sensitivity: string }[]
+  ownerName: string
+  ownerEmail: string
+}
+
+function ActivitiesContent({ investigation }: { investigation?: InvestigationContext }) {
+  const [graphViewMode, setGraphViewMode] = useState<GraphViewMode>('both')
+  const [showLeftPanel, setShowLeftPanel] = useState(!!investigation)
+  const [showInvestigationPanel, setShowInvestigationPanel] = useState(!!investigation)
   const [showRightPanel, setShowRightPanel] = useState(false)
   const [detailPanelWidth, setDetailPanelWidth] = useState(520)
   const [isResizingRightPanel, setIsResizingRightPanel] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const graphPaneRef = useRef<HTMLDivElement | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
-  const initialGraphData = getProposalActivitiesGraphData([])
+  const pendingNavRef = useRef<string | null>(null)
+  const initialGraphData = getProposalActivitiesGraphData([], graphViewMode)
   const [nodes, setNodes, onNodesChange] = useNodesState(initialGraphData.nodes as any)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraphData.edges)
   const [selectedActivity, setSelectedActivity] = useState(1)
   const [selectedNode, setSelectedNode] = useState<any>(null)
   const [lastClickedNodeId, setLastClickedNodeId] = useState<string | null>(null)
   const [selectedUsersPanelRow, setSelectedUsersPanelRow] = useState<any | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: any } | null>(null)
 
   const selectedNodeDetails = selectedNode ? getProposalNodeDetailModel(selectedNode) : null
   const isUsersSummaryNode = selectedNode?.id === 'users'
   const isUsersRowDetailView = isUsersSummaryNode && !!selectedUsersPanelRow
 
   useEffect(() => {
-    const nextGraphData = getProposalActivitiesGraphData(expandedGroups)
+    const nextGraphData = getProposalActivitiesGraphData(expandedGroups, graphViewMode)
     const highlightedNodes = (nextGraphData.nodes as any[]).map((node: any) => ({
       ...node,
       data: { ...node.data, isLastClicked: node.id === lastClickedNodeId },
     }))
     setNodes(highlightedNodes as any)
     setEdges(nextGraphData.edges as any)
-  }, [expandedGroups, lastClickedNodeId, setNodes, setEdges])
+  }, [expandedGroups, lastClickedNodeId, graphViewMode, setNodes, setEdges])
+
+  // Helper to expand a group and zoom to it
+  const expandAndFocusGroup = (groupId: string) => {
+    const descendants = getProposalDescendantGroups(groupId)
+    // Only expand first two levels (e.g., sites + siteFiles), not deeper (siteFilesMore)
+    const allToExpand = [groupId, ...descendants].slice(0, 2)
+    setExpandedGroups(prev => {
+      const next = [...prev]
+      allToExpand.forEach(id => { if (!next.includes(id)) next.push(id) })
+      return next
+    })
+    setLastClickedNodeId(groupId)
+    setSelectedNode(proposalGraphNodes.find((n: any) => n.id === groupId) ?? null)
+
+    // Zoom to the branch after layout settles
+    const doFitView = (instance: any) => {
+      const branchNodeIds = new Set<string>([groupId])
+      allToExpand.forEach(gId => {
+        (proposalGroupChildren[gId] ?? []).forEach((n: any) => branchNodeIds.add(n.id))
+      })
+      instance.fitView({
+        padding: 0.3,
+        minZoom: 0.5,
+        maxZoom: 1,
+        duration: 400,
+        nodes: Array.from(branchNodeIds).map(id => ({ id })),
+      })
+    }
+
+    if (reactFlowInstance) {
+      setTimeout(() => doFitView(reactFlowInstance), 300)
+    } else {
+      // Graph not ready yet — store for later
+      pendingNavRef.current = groupId
+    }
+  }
 
   // Listen for navigate-to-group events from Overview connected resources
   useEffect(() => {
     const handler = (e: Event) => {
       const groupId = (e as CustomEvent).detail
-      if (groupId && !expandedGroups.includes(groupId)) {
-        setExpandedGroups(prev => [...prev, groupId])
-      }
-      setLastClickedNodeId(groupId)
-      setSelectedNode(proposalGraphNodes.find((n: any) => n.id === groupId) ?? null)
-      setShowRightPanel(true)
+      if (groupId) expandAndFocusGroup(groupId)
     }
     window.addEventListener('navigate-to-group', handler)
     return () => window.removeEventListener('navigate-to-group', handler)
-  }, [expandedGroups])
+  }, [expandedGroups, reactFlowInstance])
+
+  // Process pending navigation when reactFlowInstance becomes available
+  useEffect(() => {
+    if (reactFlowInstance && pendingNavRef.current) {
+      const groupId = pendingNavRef.current
+      pendingNavRef.current = null
+      const descendants = getProposalDescendantGroups(groupId)
+      const allToExpand = [groupId, ...descendants].slice(0, 2)
+      
+      // Expand groups
+      setExpandedGroups(prev => {
+        const next = [...prev]
+        allToExpand.forEach(id => { if (!next.includes(id)) next.push(id) })
+        return next
+      })
+      setLastClickedNodeId(groupId)
+      setSelectedNode(proposalGraphNodes.find((n: any) => n.id === groupId) ?? null)
+
+      const branchNodeIds = new Set<string>([groupId])
+      allToExpand.forEach(gId => {
+        (proposalGroupChildren[gId] ?? []).forEach((n: any) => branchNodeIds.add(n.id))
+      })
+      setTimeout(() => {
+        reactFlowInstance.fitView({
+          padding: 0.3,
+          minZoom: 0.5,
+          maxZoom: 1,
+          duration: 400,
+          nodes: Array.from(branchNodeIds).map(id => ({ id })),
+        })
+      }, 300)
+    }
+  }, [reactFlowInstance])
 
   useEffect(() => {
     if (!reactFlowInstance) return
@@ -397,10 +691,88 @@ function ActivitiesContent() {
   }, [isUsersSummaryNode])
 
   return (
-    <div ref={containerRef} className={`flex h-[78vh] min-h-[560px] max-h-[900px] border border-gray-200 bg-white shadow-sm rounded-md overflow-hidden ${isResizingRightPanel ? 'select-none' : ''}`}>
+    <div ref={containerRef} className={`flex border border-gray-200 bg-white shadow-sm overflow-hidden ${isResizingRightPanel ? 'select-none' : ''}`} style={{ height: 'calc(100vh - 180px)' }}>
 
-      {/* Left Pane - Activity List */}
-      {showLeftPanel && <div className="w-[340px] border-r border-gray-200 flex flex-col bg-[#F8F9FA]">
+      {/* Left Pane - Investigation Panel or Activity List */}
+      {showLeftPanel && showInvestigationPanel && investigation ? (
+        <div className="w-[320px] border-r border-gray-200 flex flex-col bg-white">
+          {/* Investigation header */}
+          <div className="px-4 py-4 border-b border-gray-200 bg-[#FAF9F8]">
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="#616161" className="shrink-0"><circle cx="10" cy="10" r="8" stroke="#616161" strokeWidth="1.5" fill="none"/><path d="M10 6v4M10 12.5v.5" stroke="#616161" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <span className="text-[12px] font-semibold text-[#424242] uppercase tracking-wide">Investigation</span>
+              </div>
+              <button className="text-gray-400 hover:text-gray-600" onClick={() => { setShowLeftPanel(false); setShowInvestigationPanel(false) }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="text-[13px] font-semibold text-[#C50F1F] leading-snug mt-1">{investigation.riskType} spike — {investigation.delta}</div>
+            <div className="text-[11px] text-[#616161] mt-1 leading-relaxed">{investigation.message}</div>
+            <div className="text-[10px] text-[#A19F9D] mt-1">Detected {investigation.detectedAgo}</div>
+          </div>
+
+          {/* Affected files */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="text-[10px] text-[#616161] uppercase tracking-wide font-semibold mb-2">{investigation.affectedFiles.length} files exfiltrated</div>
+            <div className="space-y-1.5">
+              {investigation.affectedFiles.map((file) => (
+                <button
+                  key={file.id}
+                  className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-100 hover:border-[#0078D4] hover:bg-[#F5F9FE] transition-colors group"
+                  onClick={() => {
+                    setLastClickedNodeId(file.id)
+                    const fileNode = nodes.find((n: any) => n.id === file.id)
+                    if (fileNode) {
+                      setSelectedNode(fileNode)
+                      // Zoom to the clicked file node
+                      if (reactFlowInstance) {
+                        setTimeout(() => {
+                          reactFlowInstance.fitView({
+                            padding: 0.5,
+                            minZoom: 0.6,
+                            maxZoom: 1.2,
+                            duration: 400,
+                            nodes: [{ id: file.id }],
+                          })
+                        }, 100)
+                      }
+                    }
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#616161" strokeWidth="1.5" className="shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] text-[#242424] font-medium truncate">{file.name}</div>
+                    <div className="text-[10px] text-[#616161]">{file.sensitivity}</div>
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#616161" strokeWidth="1.5" className="shrink-0 opacity-0 group-hover:opacity-100"><path d="M6 4l4 4-4 4"/></svg>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-4 py-3 flex-1">
+            <div className="text-[10px] text-[#616161] uppercase tracking-wide font-semibold mb-2">Actions</div>
+            <div className="space-y-1.5">
+              <a href={`mailto:${investigation.ownerEmail}`} className="flex items-center gap-2 px-2.5 py-2 text-[12px] text-[#0078D4] border border-gray-200 rounded-md hover:bg-[#F5F9FE] hover:border-[#0078D4] transition-colors">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M2 4l8 6 8-6"/></svg>
+                Contact owner ({investigation.ownerName})
+              </a>
+              <button className="w-full flex items-center gap-2 px-2.5 py-2 text-[12px] text-white bg-[#0078D4] rounded-md hover:bg-[#106EBE] transition-colors">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"/><path d="M8 12h8"/></svg>
+                Create DLP policy
+              </button>
+            </div>
+          </div>
+
+          {/* Back link */}
+          <div className="px-4 py-3 border-t border-gray-100">
+            <button onClick={() => { setShowLeftPanel(false); setShowInvestigationPanel(false) }} className="text-[11px] text-[#0078D4] hover:underline">← Back to Overview</button>
+          </div>
+        </div>
+      ) : showLeftPanel && (
+        <div className="w-[340px] border-r border-gray-200 flex flex-col bg-[#F8F9FA]">
         <div className="p-4 border-b border-gray-200 bg-white">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-sm font-semibold text-[#242424]">Agent activities</h2>
@@ -455,15 +827,57 @@ function ActivitiesContent() {
             </div>
           </div>
         </div>
-      </div>}
+      </div>)}
 
       {/* Middle Pane - Interactive Graph */}
-      <div className={`flex-1 bg-[#F9F9F9] relative ${showRightPanel ? 'border-r border-gray-200' : ''}`}>
+      <div ref={graphPaneRef} className={`flex-1 bg-[#F9F9F9] relative ${showRightPanel ? 'border-r border-gray-200' : ''}`}>
         {!showLeftPanel && (
           <button className="absolute top-3 left-3 z-20 px-2 py-1 text-[11px] rounded border border-gray-300 bg-white text-[#242424] hover:bg-gray-50" onClick={() => setShowLeftPanel(true)}>
             Show activities
           </button>
         )}
+
+        {/* Graph View Mode Toggle */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+          {([
+            { key: 'active' as GraphViewMode, label: 'Active only', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#0078D4" /></svg> },
+            { key: 'both' as GraphViewMode, label: 'Both', icon: <svg width="12" height="12" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#0078D4" strokeWidth="1.5" /><path d="M7 1.5A5.5 5.5 0 0 1 7 12.5" fill="#0078D4" /></svg> },
+            { key: 'configured' as GraphViewMode, label: 'Configured', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#8A8886" strokeWidth="1.5" strokeDasharray="3,2" /></svg> },
+          ]).map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setGraphViewMode(key)}
+              className={`px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                graphViewMode === key
+                  ? 'bg-[#0078D4] text-white'
+                  : 'text-[#616161] hover:bg-gray-50'
+              }`}
+            >
+              {graphViewMode !== key && icon}
+              {graphViewMode === key && <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="white" /></svg>}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Ghost node legend */}
+        {graphViewMode !== 'active' && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] text-[#242424]">
+              <div className="w-3.5 h-3.5 rounded-full border-2 border-[#0078D4] bg-white" />
+              <span>Active (runtime)</span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
+              <div className="w-3.5 h-3.5 rounded-full border-2 border-dashed border-[#8A8886] bg-[#FAF9F8] opacity-60" />
+              <span>Configured only</span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
+              <svg width="24" height="2"><line x1="0" y1="1" x2="24" y2="1" stroke="#B3B3B3" strokeWidth="2" strokeDasharray="4,3" /></svg>
+              <span>Configured link</span>
+            </div>
+          </div>
+        )}
+
         {!showRightPanel && (
           <button className="absolute top-3 right-3 z-20 px-2 py-1 text-[11px] rounded border border-gray-300 bg-white text-[#242424] hover:bg-gray-50" onClick={() => setShowRightPanel(true)}>
             Show details
@@ -476,10 +890,10 @@ function ActivitiesContent() {
           onEdgesChange={onEdgesChange}
           onInit={setReactFlowInstance}
           onNodeClick={(_, node) => {
+            setContextMenu(null)
             setLastClickedNodeId(node?.id ?? null)
             if (node?.id !== '1') {
               setSelectedNode(node)
-              setShowRightPanel(true)
             }
             if (node?.data?.expandable && node?.data?.groupId) {
               setExpandedGroups((previous) => {
@@ -490,6 +904,21 @@ function ActivitiesContent() {
                 return [...previous, node.data.groupId]
               })
             }
+          }}
+          onNodeContextMenu={(event, node) => {
+            event.preventDefault()
+            if (node?.id === '1') return
+            setLastClickedNodeId(node?.id ?? null)
+            setSelectedNode(node)
+            const bounds = graphPaneRef.current?.getBoundingClientRect()
+            setContextMenu({
+              x: event.clientX - (bounds?.left ?? 0),
+              y: event.clientY - (bounds?.top ?? 0),
+              node,
+            })
+          }}
+          onPaneClick={() => {
+            setContextMenu(null)
           }}
           nodeTypes={proposalNodeTypes}
           fitView
@@ -505,6 +934,45 @@ function ActivitiesContent() {
             className="!bg-white !shadow-sm !border !border-gray-200"
           />
         </ReactFlow>
+
+        {/* Context Menu */}
+        {contextMenu && (
+          <div
+            className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <button
+              className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+              onClick={() => {
+                setSelectedNode(contextMenu.node)
+                setShowRightPanel(true)
+                setContextMenu(null)
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><circle cx="10" cy="10" r="8"/><path d="M9.5 6h1v5h-1V6Zm0 6h1v1h-1v-1Z"/></svg>
+              View details
+            </button>
+            {contextMenu.node?.data?.expandable && (
+              <button
+                className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
+                onClick={() => {
+                  const groupId = contextMenu.node?.data?.groupId
+                  if (groupId) {
+                    setExpandedGroups((prev) =>
+                      prev.includes(groupId)
+                        ? prev.filter((g) => g !== groupId && !getProposalDescendantGroups(groupId).includes(g))
+                        : [...prev, groupId]
+                    )
+                  }
+                  setContextMenu(null)
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><path d="M3 10h14M10 3v14"/></svg>
+                {expandedGroups.includes(contextMenu.node?.data?.groupId) ? 'Collapse group' : 'Expand group'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {showRightPanel && (
@@ -630,6 +1098,64 @@ function ActivitiesContent() {
               <div className={`text-[11px] inline-flex items-center px-2 py-1 rounded ${selectedNode?.data?.isRisk ? 'bg-[#FDE7E9] text-[#C50F1F]' : 'bg-[#EBF3FC] text-[#0078D4]'}`}>
                 {selectedNodeDetails.status}
               </div>
+
+              {/* Enriched file panel: Users who accessed */}
+              {(selectedNodeDetails as any).users && (
+                <div>
+                  <div className="text-[12px] font-semibold text-[#242424] mb-2 mt-1">Users who accessed</div>
+                  <div className="space-y-2">
+                    {(selectedNodeDetails as any).users.map((user: any) => (
+                      <div key={user.name} className="flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-lg">
+                        <div className={`w-7 h-7 rounded-full ${user.bg} text-white text-[10px] font-semibold flex items-center justify-center shrink-0`}>{user.initials}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12px] text-[#242424] font-medium">{user.name}</div>
+                          <div className="text-[10px] text-[#616161]">{user.action} · {user.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Enriched file panel: Recent activities */}
+              {(selectedNodeDetails as any).activities && (
+                <div>
+                  <div className="text-[12px] font-semibold text-[#242424] mb-2 mt-1">Recent activities</div>
+                  <div className="space-y-2">
+                    {(selectedNodeDetails as any).activities.map((act: any, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2.5 px-3 py-2 bg-white border border-gray-200 rounded-lg">
+                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${act.type === 'sensitive' ? 'bg-[#C50F1F]' : 'bg-[#0078D4]'}`} />
+                        <div>
+                          <div className="text-[12px] text-[#242424] font-medium">{act.title}</div>
+                          <div className="text-[10px] text-[#616161]">{act.detail}</div>
+                          <div className="text-[10px] text-[#A19F9D] mt-0.5">{act.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Enriched file panel: Actions */}
+              {(selectedNodeDetails as any).hasEnrichedPanel && (
+                <div>
+                  <div className="text-[12px] font-semibold text-[#242424] mb-2 mt-1">Actions</div>
+                  <div className="space-y-1.5">
+                    <button className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#0078D4] border border-gray-200 rounded-lg hover:bg-[#F5F9FE] hover:border-[#0078D4] transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 2"/></svg>
+                      View in Activity Explorer
+                    </button>
+                    <button className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#0078D4] border border-gray-200 rounded-lg hover:bg-[#F5F9FE] hover:border-[#0078D4] transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h12v12H4z"/><path d="M8 2v4M12 2v4M2 8h4M14 8h4"/></svg>
+                      Apply sensitivity label
+                    </button>
+                    <button className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#0078D4] border border-gray-200 rounded-lg hover:bg-[#F5F9FE] hover:border-[#0078D4] transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="10" width="14" height="7" rx="2"/><path d="M7 10V7a3 3 0 0 1 6 0v3"/></svg>
+                      Restrict access
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -893,6 +1419,7 @@ function OverviewContent({ agent, onNavigateToActivities }: { agent: any; onNavi
   const recentActivities = getRecentActivities(agent.agentId)
   const [trendFilter, setTrendFilter] = useState<string[]>([])
   const anomaly = mockAnomalies.find(a => a.agentId === agent.agentId)
+  const spikeData = spikeAgents.find(s => s.agentId === agent.agentId)
 
   return (
     <div className="space-y-5">
@@ -917,23 +1444,23 @@ function OverviewContent({ agent, onNavigateToActivities }: { agent: any; onNavi
               <div className="flex items-center justify-between px-3 py-2.5 bg-[#FAFAFA] rounded-lg border border-gray-100 hover:border-[#0078D4] hover:bg-[#F5F9FE] cursor-pointer transition-colors group">
                 <div className="flex items-center gap-2.5">
                   <span className="px-1.5 py-0.5 bg-[#FDE7E9] text-[#C50F1F] text-[10px] font-bold rounded">CRITICAL</span>
-                  <span className="text-[13px] text-[#242424]">Create DLP policy to block exfiltration from this agent</span>
+                  <span className="text-[13px] text-[#242424]">Review {spikeData?.sensitiveActivities24h ?? 4} sensitive documents emailed externally in this spike</span>
                 </div>
-                <span className="text-[11px] text-[#0078D4] opacity-0 group-hover:opacity-100 transition-opacity">Create DLP policy →</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-2.5 bg-[#FAFAFA] rounded-lg border border-gray-100 hover:border-[#0078D4] hover:bg-[#F5F9FE] cursor-pointer transition-colors group">
-                <div className="flex items-center gap-2.5">
-                  <span className="px-1.5 py-0.5 bg-[#FDE7E9] text-[#C50F1F] text-[10px] font-bold rounded">CRITICAL</span>
-                  <span className="text-[13px] text-[#242424]">Review {recentActivities.filter(a => a.isSensitive).length} sensitive activities in the last 48 hours</span>
-                </div>
-                <span className="text-[11px] text-[#0078D4] opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); onNavigateToActivities?.() }}>View in Activity graph →</span>
+                <span className="text-[11px] text-[#0078D4] opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); onNavigateToActivities?.('sites') }}>View in Activity graph →</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2.5 bg-[#FAFAFA] rounded-lg border border-gray-100 hover:border-[#0078D4] hover:bg-[#F5F9FE] cursor-pointer transition-colors group">
                 <div className="flex items-center gap-2.5">
                   <span className="px-1.5 py-0.5 bg-[#FFF4CE] text-[#8A6914] text-[10px] font-bold rounded">HIGH</span>
-                  <span className="text-[13px] text-[#242424]">Contact owner {enrichment.owner.name} ({enrichment.department}) about this spike</span>
+                  <span className="text-[13px] text-[#242424]">Contact owner {enrichment.owner.name} to confirm if activity is expected</span>
                 </div>
                 <a href={`mailto:${enrichment.owner.email}`} className="text-[11px] text-[#0078D4] opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>{enrichment.owner.email} →</a>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2.5 bg-[#FAFAFA] rounded-lg border border-gray-100 hover:border-[#0078D4] hover:bg-[#F5F9FE] cursor-pointer transition-colors group">
+                <div className="flex items-center gap-2.5">
+                  <span className="px-1.5 py-0.5 bg-[#FDE7E9] text-[#C50F1F] text-[10px] font-bold rounded">CRITICAL</span>
+                  <span className="text-[13px] text-[#242424]">Create DLP policy to prevent future {anomaly.riskType.toLowerCase()} from this agent</span>
+                </div>
+                <span className="text-[11px] text-[#0078D4] opacity-0 group-hover:opacity-100 transition-opacity">Create DLP policy →</span>
               </div>
             </div>
           </div>
@@ -1308,6 +1835,7 @@ export default function ClevelandAgentDetails() {
   const { agentId } = useParams()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Overview')
+  const [investigationCtx, setInvestigationCtx] = useState<InvestigationContext | undefined>(undefined)
   const agent = rows.find((r) => r.agentId === agentId)
 
   if (!agent) {
@@ -1315,7 +1843,7 @@ export default function ClevelandAgentDetails() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-auto">
+    <div className={`flex flex-col h-full bg-white ${activeTab === 'Activity graph' ? 'overflow-hidden' : 'overflow-auto'}`}>
       {/* Breadcrumb */}
       <div className="px-6 py-4 border-b border-[#E0E0E0] flex items-center gap-2">
         <button onClick={() => navigate('/cleveland')} className="text-[#0078D4] hover:underline flex items-center gap-1 text-sm font-semibold">
@@ -1325,9 +1853,9 @@ export default function ClevelandAgentDetails() {
         <span className="ml-auto px-2 py-0.5 bg-[#EBF3FC] text-[#0078D4] text-[10px] font-semibold rounded border border-[#0078D4]/20">CLEVELAND</span>
       </div>
 
-      <div className="w-full">
+      <div className={`flex-1 flex flex-col ${activeTab === 'Activity graph' ? 'overflow-hidden' : 'overflow-auto'}`} style={{ minHeight: 0 }}>
         {/* Header */}
-        <div className="bg-white px-8 pt-6 pb-0 shadow-sm border-b border-gray-200">
+        <div className="bg-white px-8 pt-6 pb-0 shadow-sm border-b border-gray-200 shrink-0">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shrink-0 border border-gray-100 shadow-sm">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -1358,11 +1886,31 @@ export default function ClevelandAgentDetails() {
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50 min-h-screen">
-          {activeTab === 'Overview' && <OverviewContent agent={agent} onNavigateToActivities={(targetGroup?: string) => { setActiveTab('Activity graph'); if (targetGroup) { setTimeout(() => { const event = new CustomEvent('navigate-to-group', { detail: targetGroup }); window.dispatchEvent(event); }, 100); } }} />}
+        <div className={`${activeTab === 'Activity graph' ? 'flex-1 flex flex-col overflow-hidden' : 'p-8 bg-gray-50 min-h-screen'}`} style={activeTab === 'Activity graph' ? { minHeight: 0 } : undefined}>
+          {activeTab === 'Overview' && <OverviewContent agent={agent} onNavigateToActivities={(targetGroup?: string) => {
+            // Build investigation context from anomaly data
+            const anomaly = mockAnomalies.find(a => a.agentId === agent.agentId)
+            const enrichment = getEnrichment(agent.agentId)
+            const spikeData = spikeAgents.find(s => s.agentId === agent.agentId)
+            if (anomaly) {
+              const affectedFiles = sharePointSensitiveFiles.filter(f => f.isRisk).map(f => ({ id: f.id, name: f.name, sensitivity: f.sensitivity }))
+              setInvestigationCtx({
+                riskType: anomaly.riskType,
+                delta: anomaly.delta,
+                message: anomaly.message,
+                detectedAgo: anomaly.detectedAgo,
+                destination: 'external-audit@partnerfirm.com',
+                affectedFiles,
+                ownerName: enrichment.owner.name,
+                ownerEmail: enrichment.owner.email,
+              })
+            }
+            setActiveTab('Activity graph')
+            if (targetGroup) { setTimeout(() => { const event = new CustomEvent('navigate-to-group', { detail: targetGroup }); window.dispatchEvent(event); }, 100); }
+          }} />}
           {activeTab === 'Activity graph' && (
-            <div>
-              <ActivitiesContent />
+            <div className="flex-1 flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
+              <ActivitiesContent investigation={investigationCtx} />
             </div>
           )}
           {activeTab === 'Recommendations' && (

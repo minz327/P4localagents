@@ -119,22 +119,25 @@ export default function ClevelandMetrics({ onSpikeClick }: { onSpikeClick?: () =
               ⚡ SPIKE
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[30px] 2xl:gap-[60px]">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Oversharing <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
                 <div className="text-[28px] font-semibold text-[#C50F1F] leading-none">{data.sensitive.oversharing}</div>
                 <div className="flex items-center gap-1 text-[11px] font-bold translate-y-[2px]">
                   <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className="text-[#C50F1F]"><path d="M3.5 12.5L12.5 3.5M12.5 3.5H4.5M12.5 3.5V11.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  <span className="text-[#C50F1F]">150%</span>
+                  <span className="text-[#C50F1F]">+3 new</span>
                 </div>
               </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Exfiltration <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
-                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.sensitive.exfiltration}</div>
-                <Trend value="No change" type="neutral" />
+                <div className="text-[28px] font-semibold text-[#C50F1F] leading-none">{data.sensitive.exfiltration}</div>
+                <div className="flex items-center gap-1 text-[11px] font-bold translate-y-[2px]">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className="text-[#C50F1F]"><path d="M3.5 12.5L12.5 3.5M12.5 3.5H4.5M12.5 3.5V11.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <span className="text-[#C50F1F]">+1 new</span>
+                </div>
               </div>
             </div>
             <div>

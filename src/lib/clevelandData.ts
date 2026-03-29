@@ -76,7 +76,7 @@ export const mockAnomalies: AnomalyAlert[] = [
     agentId: 'HR.Exec.T_45a2ccdc-ec13-a4...',
     riskType: 'Exfiltration',
     severity: 'critical',
-    message: 'Exfiltration activity detected — 15 sensitive documents exported in 1 hour.',
+    message: 'Exfiltration activity detected — 4 sensitive documents emailed to an external recipient in 1 hour.',
     delta: '+300%',
     detectedAgo: '45 min ago',
     timestamp: '2026-03-03T07:27:00Z',
@@ -106,7 +106,7 @@ export interface RecentActivity {
 export function getRecentActivities(_agentId: string): RecentActivity[] {
   const perAgent: Record<string, RecentActivity[]> = {
     'HR.Exec.T_45a2ccdc-ec13-a4...': [
-      { id: 'act-1', title: 'Exported Payroll-Q4.xlsx to external email', date: 'Mar 3, 2026', riskType: 'Exfiltration', isSensitive: true },
+      { id: 'act-1', title: 'Emailed Payroll-Q4.xlsx to external-audit@partnerfirm.com', date: 'Mar 3, 2026', riskType: 'Exfiltration', isSensitive: true },
       { id: 'act-2', title: 'Accessed CompPlan-2026.docx (Confidential)', date: 'Mar 3, 2026', riskType: 'Exfiltration', isSensitive: true },
       { id: 'act-3', title: 'Created public sharing link for HR folder', date: 'Mar 3, 2026', riskType: 'Oversharing', isSensitive: true },
       { id: 'act-4', title: 'Queried employee benefits database', date: 'Mar 2, 2026', riskType: null, isSensitive: false },
@@ -138,7 +138,7 @@ export interface AgentSpikeData {
 }
 
 export const spikeAgents: AgentSpikeData[] = [
-  { agentId: 'HR.Exec.T_45a2ccdc-ec13-a4...', spikePercent: 300, sensitiveActivities24h: 15, ownerName: 'John Brown' },
+  { agentId: 'HR.Exec.T_45a2ccdc-ec13-a4...', spikePercent: 300, sensitiveActivities24h: 4, ownerName: 'John Brown' },
   { agentId: 'Fin.M&A.T_fac75f59-d4d7-88...', spikePercent: 150, sensitiveActivities24h: 30, ownerName: 'Lisa Park' },
   { agentId: 'Dev.Sec.21adf640-fdfa-42d3...', spikePercent: 80, sensitiveActivities24h: 8, ownerName: 'John Brown' },
 ]
