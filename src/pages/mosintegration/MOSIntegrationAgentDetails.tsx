@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import ReactFlow, { 
   Background, 
   Controls, 
@@ -11,61 +11,28 @@ import ReactFlow, {
   Handle,
   Position
 } from 'react-flow-renderer';
-import dagre from 'dagre'
-import { demoAgents, DemoAgent, exfilIncidents, ExfilIncident, GovernanceState, getGovernanceColor, getRiskTypeColor } from '../../lib/eastmanData'
-
-// --- Dagre auto-layout helper ---
-const NODE_WIDTH = 140
-const NODE_HEIGHT = 80
-
-function applyDagreLayout(nodes: any[], edges: any[]) {
-  const g = new dagre.graphlib.Graph()
-  g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({ rankdir: 'TB', ranksep: 100, nodesep: 60, marginx: 40, marginy: 40 })
-
-  nodes.forEach((node: any) => {
-    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
-  })
-  edges.forEach((edge: any) => {
-    g.setEdge(edge.source, edge.target)
-  })
-
-  dagre.layout(g)
-
-  return nodes.map((node: any) => {
-    const pos = g.node(node.id)
-    return {
-      ...node,
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
-    }
-  })
-}
+import { rows } from '../../lib/agentsData'
 
 // --- Custom Node Components for the Graph ---
 
 const CustomNode = ({ data }: { data: any }) => {
-  const isRoot = data.type === 'root'
-  const hasCount = !!data.countBadge
-  const inheritedRingColorClass = isRoot
-    ? 'ring-[#0078D4]'
-    : data.isRisk
-      ? 'ring-[#C50F1F]'
-      : hasCount
-        ? 'ring-[#0078D4]'
-        : 'ring-gray-400'
-
-  const isGhost = !!data.isGhost
-
-  return (
-    <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''} ${isGhost ? 'opacity-60' : ''}`}>
-      <div className={`relative w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white
-        ${isGhost ? 'border-dashed' : ''}
-        ${data.isLastClicked ? `ring-4 ${inheritedRingColorClass} ring-offset-2 ring-offset-white animate-pulse` : ''}
-        ${isRoot ? 'border-[#0078D4]' :
-          isGhost && data.isRisk ? 'border-[#C50F1F] bg-red-50' :
-          isGhost ? 'border-[#8A8886] bg-[#FAF9F8]' :
+  const isRoot = data.type === 'root';
+    const hasCount = !!data.countBadge;
+        const inheritedRingColorClass = isRoot
+                ? 'ring-[#0078D4]'
+                : data.isRisk
+                        ? 'ring-[#C50F1F]'
+                        : hasCount
+                                ? 'ring-[#0078D4]'
+                                : 'ring-gray-400'
+  
+    return (
+        <div className={`flex flex-col items-center justify-center p-2 rounded-lg ${data.selected ? 'item-selected' : ''} ${data.expandable ? 'cursor-pointer' : ''}`}>
+            <div className={`relative w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white
+                ${data.isLastClicked ? `ring-4 ${inheritedRingColorClass} ring-offset-2 ring-offset-white animate-pulse` : ''}
+        ${isRoot ? 'border-[#0078D4]' : 
           data.isRisk ? 'border-[#C50F1F] bg-red-50' :
-            hasCount ? 'border-[#0078D4] bg-[#EBF3FC]' : 'border-gray-300'}`}>
+                                        hasCount ? 'border-[#0078D4] bg-[#EBF3FC]' : 'border-gray-300'}`}>
                 {data.countBadge && (
                     <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-[#0078D4] text-white text-[10px] leading-5 font-semibold text-center">
                         {data.countBadge}
@@ -131,10 +98,10 @@ const graphNodes: any[] = [
 ];
 
 const graphEdges: any[] = [
-    { id: 'e1-users', source: '1', target: 'users', type: 'default' },
-    { id: 'e1-sites', source: '1', target: 'sites', type: 'default', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-    { id: 'e1-tools', source: '1', target: 'tools', type: 'default' },
-    { id: 'e1-agents', source: '1', target: 'agents', type: 'default', animated: true, style: { stroke: '#C50F1F' } },
+    { id: 'e1-users', source: '1', target: 'users', type: 'smoothstep' },
+    { id: 'e1-sites', source: '1', target: 'sites', type: 'smoothstep', animated: true, style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+    { id: 'e1-tools', source: '1', target: 'tools', type: 'smoothstep' },
+    { id: 'e1-agents', source: '1', target: 'agents', type: 'smoothstep', animated: true, style: { stroke: '#C50F1F' } },
 ];
 
 const groupChildren: Record<string, any[]> = {
@@ -179,114 +146,48 @@ const groupChildren: Record<string, any[]> = {
 
 const groupChildEdges: Record<string, any[]> = {
     users: [
-        { id: 'e-users-1', source: 'users', target: 'user-1', type: 'default' },
-        { id: 'e-users-2', source: 'users', target: 'user-2', type: 'default' },
-        { id: 'e-users-3', source: 'users', target: 'user-3', type: 'default' },
+        { id: 'e-users-1', source: 'users', target: 'user-1', type: 'smoothstep' },
+        { id: 'e-users-2', source: 'users', target: 'user-2', type: 'smoothstep' },
+        { id: 'e-users-3', source: 'users', target: 'user-3', type: 'smoothstep' },
     ],
     sites: [
-        { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-sites-1', source: 'sites', target: 'site-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
     ],
     siteFiles: [
-        { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
-        { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'default', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-1', source: 'site-1', target: 'file-1', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-2', source: 'site-1', target: 'file-2', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-3', source: 'site-1', target: 'file-3', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-4', source: 'site-1', target: 'file-4', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
+        { id: 'e-site-file-5', source: 'site-1', target: 'file-5', type: 'smoothstep', style: knowledgeBranchHasRisk ? { stroke: '#C50F1F' } : undefined },
     ],
     tools: [
-        { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'default' },
-        { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'default' },
-        { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'default' },
-        { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'default' },
+        { id: 'e-tools-1', source: 'tools', target: 'tool-1', type: 'smoothstep' },
+        { id: 'e-tools-2', source: 'tools', target: 'tool-2', type: 'smoothstep' },
+        { id: 'e-tools-3', source: 'tools', target: 'tool-3', type: 'smoothstep' },
+        { id: 'e-tools-more', source: 'tools', target: 'tool-more', type: 'smoothstep' },
     ],
     toolsMore: [
-        { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'default' },
-        { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'default' },
-        { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'default' },
-        { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'default' },
-        { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'default' },
-        { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'default' },
-        { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'default' },
-        { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'default' },
-        { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'default' },
-        { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'default' },
+        { id: 'e-tools-4', source: 'tool-more', target: 'tool-4', type: 'smoothstep' },
+        { id: 'e-tools-5', source: 'tool-more', target: 'tool-5', type: 'smoothstep' },
+        { id: 'e-tools-6', source: 'tool-more', target: 'tool-6', type: 'smoothstep' },
+        { id: 'e-tools-7', source: 'tool-more', target: 'tool-7', type: 'smoothstep' },
+        { id: 'e-tools-8', source: 'tool-more', target: 'tool-8', type: 'smoothstep' },
+        { id: 'e-tools-9', source: 'tool-more', target: 'tool-9', type: 'smoothstep' },
+        { id: 'e-tools-10', source: 'tool-more', target: 'tool-10', type: 'smoothstep' },
+        { id: 'e-tools-11', source: 'tool-more', target: 'tool-11', type: 'smoothstep' },
+        { id: 'e-tools-12', source: 'tool-more', target: 'tool-12', type: 'smoothstep' },
+        { id: 'e-tools-13', source: 'tool-more', target: 'tool-13', type: 'smoothstep' },
     ],
     agents: [
-        { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'default', style: { stroke: '#C50F1F' } },
-        { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'default', style: { stroke: '#C50F1F' } },
-        { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'default', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-1', source: 'agents', target: 'agent-1', type: 'smoothstep', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-2', source: 'agents', target: 'agent-2', type: 'smoothstep', style: { stroke: '#C50F1F' } },
+        { id: 'e-agents-3', source: 'agents', target: 'agent-3', type: 'smoothstep', style: { stroke: '#C50F1F' } },
     ],
 }
 
 const groupHierarchy: Record<string, string[]> = {
     sites: ['siteFiles'],
     tools: ['toolsMore'],
-}
-
-// ══════════════════════════════════════════════════════════
-// BUILD-TIME CONFIGURATION LAYER
-// Resources configured on the agent but not necessarily invoked at runtime.
-// Shown as "ghost" nodes with dashed borders in the unified graph.
-// ══════════════════════════════════════════════════════════
-
-const buildTimeTopNodes: any[] = [
-  { id: 'connections', type: 'custom', position: { x: 1160, y: 220 }, data: { label: 'Connections', subLabel: '4 configured', countBadge: '+4', isGhost: true, expandable: true, groupId: 'connections' } },
-  { id: 'triggers', type: 'custom', position: { x: 1380, y: 220 }, data: { label: 'Triggers', subLabel: '1 flow', countBadge: '+1', isGhost: true, expandable: true, groupId: 'triggers' } },
-]
-
-const buildTimeTopEdges: any[] = [
-  { id: 'e1-conn', source: '1', target: 'connections', type: 'default' },
-  { id: 'e1-trig', source: '1', target: 'triggers', type: 'default' },
-]
-
-const buildTimeGroupChildren: Record<string, any[]> = {
-  connections: [
-    { id: 'conn-1', type: 'custom', position: { x: 1020, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'Office 365 Users', isGhost: true } },
-    { id: 'conn-2', type: 'custom', position: { x: 1160, y: 430 }, data: { label: 'kaicheng@...', subLabel: 'SharePoint', isGhost: true } },
-    { id: 'conn-3', type: 'custom', position: { x: 1300, y: 430 }, data: { label: 'svc-account', subLabel: 'SQL Server', isGhost: true } },
-    { id: 'conn-4', type: 'custom', position: { x: 1440, y: 430 }, data: { label: 'legacy-api-key', subLabel: 'No auth ⚠️', isGhost: true, isRisk: true } },
-  ],
-  triggers: [
-    { id: 'trigger-1', type: 'custom', position: { x: 1380, y: 430 }, data: { label: 'New email arrives', subLabel: 'Power Automate', isGhost: true } },
-  ],
-}
-
-const buildTimeGroupChildEdges: Record<string, any[]> = {
-  connections: [
-    { id: 'e-conn-1', source: 'connections', target: 'conn-1', type: 'default' },
-    { id: 'e-conn-2', source: 'connections', target: 'conn-2', type: 'default' },
-    { id: 'e-conn-3', source: 'connections', target: 'conn-3', type: 'default' },
-    { id: 'e-conn-4', source: 'connections', target: 'conn-4', type: 'default' },
-  ],
-  triggers: [
-    { id: 'e-trigger-1', source: 'triggers', target: 'trigger-1', type: 'default' },
-  ],
-}
-
-const buildTimeExtraChildren: Record<string, any[]> = {
-  toolsMore: [
-    { id: 'cfg-dynamics', type: 'custom', position: { x: 1260, y: 670 }, data: { label: 'Dynamics 365', subLabel: 'Configured · unused', isGhost: true } },
-    { id: 'cfg-weather', type: 'custom', position: { x: 1400, y: 670 }, data: { label: 'MSN Weather', subLabel: 'Configured · unused', isGhost: true } },
-  ],
-  sites: [
-    { id: 'cfg-dataverse', type: 'custom', position: { x: 500, y: 430 }, data: { label: 'Dataverse', subLabel: 'Configured · not accessed', isGhost: true } },
-  ],
-  agents: [
-    { id: 'cfg-compbot', type: 'custom', position: { x: 1240, y: 430 }, data: { label: 'Compliance Bot', subLabel: 'Configured · 0 calls', isGhost: true } },
-  ],
-}
-
-const buildTimeExtraChildEdges: Record<string, any[]> = {
-  toolsMore: [
-    { id: 'e-cfg-dyn', source: 'tool-more', target: 'cfg-dynamics', type: 'default' },
-    { id: 'e-cfg-wea', source: 'tool-more', target: 'cfg-weather', type: 'default' },
-  ],
-  sites: [
-    { id: 'e-cfg-dv', source: 'sites', target: 'cfg-dataverse', type: 'default' },
-  ],
-  agents: [
-    { id: 'e-cfg-cb', source: 'agents', target: 'cfg-compbot', type: 'default' },
-  ],
 }
 
 const usersPanelRows = (groupChildren.users ?? []).map((node: any, index: number) => {
@@ -318,19 +219,9 @@ function getDescendantGroups(groupId: string): string[] {
     }, [])
 }
 
-type GraphViewMode = 'active' | 'configured' | 'both'
-
-function getActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMode = 'active') {
-    const showConfigured = viewMode === 'configured' || viewMode === 'both'
-
+function getActivitiesGraphData(expandedGroups: string[]) {
     const nodes = [...graphNodes]
     const edges = [...graphEdges]
-
-    // Add build-time top-level ghost nodes (Connections, Triggers)
-    if (showConfigured) {
-      nodes.push(...buildTimeTopNodes)
-      edges.push(...buildTimeTopEdges)
-    }
 
     expandedGroups.forEach((groupId) => {
         if (groupChildren[groupId]) {
@@ -339,19 +230,8 @@ function getActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMod
         if (groupChildEdges[groupId]) {
             edges.push(...groupChildEdges[groupId])
         }
-        // Build-time group children (Connections, Triggers)
-        if (showConfigured && buildTimeGroupChildren[groupId]) {
-          nodes.push(...buildTimeGroupChildren[groupId])
-          edges.push(...(buildTimeGroupChildEdges[groupId] ?? []))
-        }
-        // Ghost additions to existing runtime groups
-        if (showConfigured && buildTimeExtraChildren[groupId]) {
-          nodes.push(...buildTimeExtraChildren[groupId])
-          edges.push(...(buildTimeExtraChildEdges[groupId] ?? []))
-        }
     })
 
-    const ghostNodeIds = new Set(nodes.filter((n: any) => !!n?.data?.isGhost).map((n: any) => n.id))
     const riskNodeIds = new Set(
         nodes
             .filter((node: any) => !!node?.data?.isRisk)
@@ -359,19 +239,7 @@ function getActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMod
     )
 
     const styledEdges = edges.map((edge: any) => {
-        const isGhostTarget = ghostNodeIds.has(edge.target)
-        const isGhostSource = ghostNodeIds.has(edge.source)
-        const isGhostEdge = isGhostTarget || isGhostSource
-        const isRiskTarget = riskNodeIds.has(edge.target) && !isGhostEdge
-
-        // Configured-only mode: neutral architecture view
-        if (viewMode === 'configured') {
-          return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: isGhostEdge ? '#C8C6C4' : '#B3B3B3', strokeDasharray: isGhostEdge ? '6,4' : undefined, opacity: isGhostEdge ? 0.5 : 0.7 } }
-        }
-        // Ghost edges: dashed, muted
-        if (isGhostEdge) {
-          return { ...edge, animated: false, style: { ...(edge.style ?? {}), stroke: '#B3B3B3', strokeDasharray: '6,4', opacity: 0.5 } }
-        }
+        const isRiskTarget = riskNodeIds.has(edge.target)
         return {
             ...edge,
             animated: isRiskTarget,
@@ -382,7 +250,7 @@ function getActivitiesGraphData(expandedGroups: string[], viewMode: GraphViewMod
         }
     })
 
-    return { nodes: applyDagreLayout(nodes, styledEdges), edges: styledEdges }
+    return { nodes, edges: styledEdges }
 }
 
 function getNodeDetailModel(node: any) {
@@ -390,7 +258,6 @@ function getNodeDetailModel(node: any) {
     const label = node?.data?.label ?? 'Node'
     const subLabel = node?.data?.subLabel ?? '-'
     const isRisk = !!node?.data?.isRisk
-    const isGhost = !!node?.data?.isGhost
 
     if (id.startsWith('user-')) {
         return {
@@ -434,61 +301,17 @@ function getNodeDetailModel(node: any) {
         }
     }
 
-    if (id.startsWith('agent-') || id === 'cfg-compbot') {
+    if (id.startsWith('agent-')) {
         return {
             title: label,
             category: 'Agent',
-            summary: isGhost ? 'Configured downstream agent — not invoked at runtime.' : 'Connected downstream agent in the activity chain.',
+            summary: 'Connected downstream agent in the activity chain.',
             items: [
                 { label: 'Agent name', value: label },
                 { label: 'Usage', value: subLabel },
                 { label: 'Branch', value: 'Agents' },
-                ...(isGhost ? [{ label: 'Status', value: 'Configured only (build-time)' }] : []),
             ],
-            status: isRisk ? 'Potential risk' : isGhost ? 'Configured · unused' : 'Monitored',
-        }
-    }
-
-    if (id.startsWith('conn-')) {
-        return {
-            title: label,
-            category: 'Connection',
-            summary: isRisk ? 'Configured connection with an authentication risk.' : 'Configured connection to an external service.',
-            items: [
-                { label: 'Connection', value: label },
-                { label: 'Service', value: subLabel },
-                { label: 'Source', value: 'Build-time configuration' },
-                ...(isRisk ? [{ label: 'Risk', value: 'Missing modern authentication' }] : []),
-            ],
-            status: isRisk ? 'Authentication risk' : 'Configured',
-        }
-    }
-
-    if (id.startsWith('trigger-')) {
-        return {
-            title: label,
-            category: 'Trigger',
-            summary: 'Configured automation trigger that can invoke this agent.',
-            items: [
-                { label: 'Trigger', value: label },
-                { label: 'Platform', value: subLabel },
-                { label: 'Source', value: 'Build-time configuration' },
-            ],
-            status: 'Configured',
-        }
-    }
-
-    if (id.startsWith('cfg-')) {
-        return {
-            title: label,
-            category: 'Configured Resource',
-            summary: 'This resource is configured but has not been invoked at runtime. Unused resources expand the agent\'s attack surface.',
-            items: [
-                { label: 'Resource', value: label },
-                { label: 'Details', value: subLabel },
-                { label: 'Runtime activity', value: 'None detected' },
-            ],
-            status: 'Unused · review needed',
+            status: isRisk ? 'Potential risk' : 'Monitored',
         }
     }
 
@@ -505,7 +328,6 @@ function getNodeDetailModel(node: any) {
 }
 
 function ActivitiesContent() {
-    const [graphViewMode, setGraphViewMode] = useState<GraphViewMode>('both')
     const [showLeftPanel, setShowLeftPanel] = useState(false)
     const [showRightPanel, setShowRightPanel] = useState(false)
     const [detailPanelWidth, setDetailPanelWidth] = useState(520)
@@ -513,21 +335,20 @@ function ActivitiesContent() {
     const containerRef = useRef<HTMLDivElement | null>(null)
         const [expandedGroups, setExpandedGroups] = useState<string[]>([])
         const [reactFlowInstance, setReactFlowInstance] = useState<any>(null)
-        const initialGraphData = getActivitiesGraphData([], graphViewMode)
+        const initialGraphData = getActivitiesGraphData([])
         const [nodes, setNodes, onNodesChange] = useNodesState(initialGraphData.nodes as any);
         const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraphData.edges);
   const [selectedActivity, setSelectedActivity] = useState(1);
       const [selectedNode, setSelectedNode] = useState<any>(null)
     const [lastClickedNodeId, setLastClickedNodeId] = useState<string | null>(null)
         const [selectedUsersPanelRow, setSelectedUsersPanelRow] = useState<any | null>(null)
-    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: any } | null>(null)
 
           const selectedNodeDetails = selectedNode ? getNodeDetailModel(selectedNode) : null
                     const isUsersSummaryNode = selectedNode?.id === 'users'
                                         const isUsersRowDetailView = isUsersSummaryNode && !!selectedUsersPanelRow
 
         useEffect(() => {
-            const nextGraphData = getActivitiesGraphData(expandedGroups, graphViewMode)
+            const nextGraphData = getActivitiesGraphData(expandedGroups)
             const highlightedNodes = (nextGraphData.nodes as any[]).map((node: any) => ({
                 ...node,
                 data: {
@@ -538,7 +359,7 @@ function ActivitiesContent() {
 
             setNodes(highlightedNodes as any)
             setEdges(nextGraphData.edges as any)
-        }, [expandedGroups, lastClickedNodeId, graphViewMode, setNodes, setEdges])
+        }, [expandedGroups, lastClickedNodeId, setNodes, setEdges])
 
         useEffect(() => {
             if (!reactFlowInstance) {
@@ -688,48 +509,6 @@ function ActivitiesContent() {
                                 Show activities
                             </button>
                         )}
-
-                        {/* Graph View Mode Toggle */}
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                          {([
-                            { key: 'active' as GraphViewMode, label: 'Active only', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#0078D4" /></svg> },
-                            { key: 'both' as GraphViewMode, label: 'Both', icon: <svg width="12" height="12" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#0078D4" strokeWidth="1.5" /><path d="M7 1.5A5.5 5.5 0 0 1 7 12.5" fill="#0078D4" /></svg> },
-                            { key: 'configured' as GraphViewMode, label: 'Configured', icon: <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#8A8886" strokeWidth="1.5" strokeDasharray="3,2" /></svg> },
-                          ]).map(({ key, label, icon }) => (
-                            <button
-                              key={key}
-                              onClick={() => setGraphViewMode(key)}
-                              className={`px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-                                graphViewMode === key
-                                  ? 'bg-[#0078D4] text-white'
-                                  : 'text-[#616161] hover:bg-gray-50'
-                              }`}
-                            >
-                              {graphViewMode !== key && icon}
-                              {graphViewMode === key && <svg width="10" height="10" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="white" /></svg>}
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Ghost node legend */}
-                        {graphViewMode !== 'active' && (
-                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-                            <div className="flex items-center gap-2 text-[11px] text-[#242424]">
-                              <div className="w-3.5 h-3.5 rounded-full border-2 border-[#0078D4] bg-white" />
-                              <span>Active (runtime)</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
-                              <div className="w-3.5 h-3.5 rounded-full border-2 border-dashed border-[#8A8886] bg-[#FAF9F8] opacity-60" />
-                              <span>Configured only</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[11px] text-[#8A8886]">
-                              <svg width="24" height="2"><line x1="0" y1="1" x2="24" y2="1" stroke="#B3B3B3" strokeWidth="2" strokeDasharray="4,3" /></svg>
-                              <span>Configured link</span>
-                            </div>
-                          </div>
-                        )}
-
                         {!showRightPanel && (
                             <button
                                 className="absolute top-3 right-3 z-20 px-2 py-1 text-[11px] rounded border border-gray-300 bg-white text-[#242424] hover:bg-gray-50"
@@ -745,11 +524,11 @@ function ActivitiesContent() {
               onEdgesChange={onEdgesChange}
                             onInit={setReactFlowInstance}
                             onNodeClick={(_, node) => {
-                                setContextMenu(null)
                                 setLastClickedNodeId(node?.id ?? null)
 
                                 if (node?.id !== '1') {
                                     setSelectedNode(node)
+                                    setShowRightPanel(true)
                                 }
 
                                 if (node?.data?.expandable && node?.data?.groupId) {
@@ -761,21 +540,6 @@ function ActivitiesContent() {
                                         return [...previous, node.data.groupId]
                                     })
                                 }
-                            }}
-                            onNodeContextMenu={(event, node) => {
-                              event.preventDefault()
-                              if (node?.id === '1') return
-                              setLastClickedNodeId(node?.id ?? null)
-                              setSelectedNode(node)
-                              const bounds = containerRef.current?.getBoundingClientRect()
-                              setContextMenu({
-                                x: event.clientX - (bounds?.left ?? 0),
-                                y: event.clientY - (bounds?.top ?? 0),
-                                node,
-                              })
-                            }}
-                            onPaneClick={() => {
-                              setContextMenu(null)
                             }}
               nodeTypes={nodeTypes}
               fitView
@@ -797,45 +561,6 @@ function ActivitiesContent() {
                     className="!bg-white !shadow-sm !border !border-gray-200"
                 />
             </ReactFlow>
-
-            {/* Context Menu */}
-            {contextMenu && (
-              <div
-                className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
-                style={{ left: contextMenu.x, top: contextMenu.y }}
-              >
-                <button
-                  className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
-                  onClick={() => {
-                    setSelectedNode(contextMenu.node)
-                    setShowRightPanel(true)
-                    setContextMenu(null)
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><circle cx="10" cy="10" r="8"/><path d="M9.5 6h1v5h-1V6Zm0 6h1v1h-1v-1Z"/></svg>
-                  View details
-                </button>
-                {contextMenu.node?.data?.expandable && (
-                  <button
-                    className="w-full text-left px-4 py-2 text-[13px] text-[#242424] hover:bg-[#F5F5F5] flex items-center gap-2"
-                    onClick={() => {
-                      const groupId = contextMenu.node?.data?.groupId
-                      if (groupId) {
-                        setExpandedGroups((prev) =>
-                          prev.includes(groupId)
-                            ? prev.filter((g) => g !== groupId && !getDescendantGroups(groupId).includes(g))
-                            : [...prev, groupId]
-                        )
-                      }
-                      setContextMenu(null)
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#616161" strokeWidth="1.5"><path d="M3 10h14M10 3v14"/></svg>
-                    {expandedGroups.includes(contextMenu.node?.data?.groupId) ? 'Collapse group' : 'Expand group'}
-                  </button>
-                )}
-              </div>
-            )}
         </div>
 
         {showRightPanel && (
@@ -1371,275 +1096,11 @@ function RecommendationsContent() {
     )
 }
 
-// ── Flow 3: Incident Investigation Section ───────────────────────
-
-function IncidentSection({ incident }: { incident: ExfilIncident }) {
-  const [showEvidence, setShowEvidence] = useState(false)
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  const [showExportSuccess, setShowExportSuccess] = useState(false)
-
-  const toggleFile = (fileId: string) => {
-    setSelectedFiles(prev => {
-      const next = new Set(prev)
-      if (next.has(fileId)) next.delete(fileId)
-      else next.add(fileId)
-      return next
-    })
-  }
-
-  const toggleAll = () => {
-    if (selectedFiles.size === incident.files.length) {
-      setSelectedFiles(new Set())
-    } else {
-      setSelectedFiles(new Set(incident.files.map(f => f.id)))
-    }
-  }
-
-  const handleExport = () => {
-    setShowExportSuccess(true)
-    setTimeout(() => {
-      setShowExportSuccess(false)
-      setShowEvidence(false)
-    }, 2000)
-  }
-
-  return (
-    <>
-      <div className="bg-white rounded-md shadow-sm border-2 border-[#C50F1F] mb-6">
-        {/* Incident header */}
-        <div className="px-6 py-4 bg-[#FDE7E9] border-b border-[#C50F1F]/20 rounded-t-md flex items-start gap-3">
-          <div className="mt-0.5">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#C50F1F"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-2h2v2h-2zm0-4V7h2v6h-2z"/></svg>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[14px] font-bold text-[#C50F1F]">Active incident</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#C50F1F] text-white">{incident.severity}</span>
-            </div>
-            <p className="text-[13px] text-[#242424] leading-relaxed">{incident.summary}</p>
-          </div>
-        </div>
-
-        {/* Incident details */}
-        <div className="px-6 py-5 space-y-5">
-          {/* Key info row */}
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <div className="text-[11px] text-[#616161] mb-1">Detected</div>
-              <div className="text-[13px] text-[#242424] font-medium">
-                {new Date(incident.detectedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] text-[#616161] mb-1">Destination</div>
-              <div className="text-[13px] text-[#242424] font-medium">{incident.destination}</div>
-              <div className="text-[11px] text-[#616161]">{incident.destinationType}</div>
-            </div>
-            <div>
-              <div className="text-[11px] text-[#616161] mb-1">Sensitive files</div>
-              <div className="text-[13px] text-[#C50F1F] font-bold">{incident.files.length} files</div>
-            </div>
-            <div>
-              <div className="text-[11px] text-[#616161] mb-1">Tools used</div>
-              <div className="flex flex-wrap gap-1">
-                {incident.toolsUsed.map(t => (
-                  <span key={t} className="px-1.5 py-0.5 bg-gray-100 text-[#242424] rounded text-[11px] border border-gray-200">{t}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Files table */}
-          <div>
-            <div className="text-[12px] font-semibold text-[#242424] mb-2">Affected files</div>
-            <div className="border border-gray-200 rounded-md overflow-hidden">
-              <table className="w-full text-[12px]">
-                <thead className="bg-[#F8F8F8]">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-[#616161]">File name</th>
-                    <th className="px-3 py-2 text-left font-medium text-[#616161]">Path</th>
-                    <th className="px-3 py-2 text-left font-medium text-[#616161]">Sensitivity</th>
-                    <th className="px-3 py-2 text-left font-medium text-[#616161]">Size</th>
-                    <th className="px-3 py-2 text-left font-medium text-[#616161]">Accessed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incident.files.map(file => (
-                    <tr key={file.id} className="border-t border-gray-100 hover:bg-[#FAF9F8]">
-                      <td className="px-3 py-2 text-[#242424] font-medium">{file.name}</td>
-                      <td className="px-3 py-2 text-[#616161] font-mono text-[11px]">{file.path}</td>
-                      <td className="px-3 py-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          file.sensitivityLabel.includes('PII') ? 'bg-[#FDE7E9] text-[#C50F1F]' :
-                          file.sensitivityLabel.includes('Highly') ? 'bg-[#FFF4CE] text-[#835C00]' :
-                          'bg-[#EBF3FC] text-[#0078D4]'
-                        }`}>{file.sensitivityLabel}</span>
-                      </td>
-                      <td className="px-3 py-2 text-[#616161]">{file.size}</td>
-                      <td className="px-3 py-2 text-[#616161]">
-                        {new Date(file.accessedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div>
-            <div className="text-[12px] font-semibold text-[#242424] mb-2">Activity timeline</div>
-            <div className="space-y-0">
-              {incident.timeline.map((event, idx) => (
-                <div key={event.id} className="flex gap-3">
-                  {/* Timeline line */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${event.isSensitive ? 'bg-[#C50F1F]' : 'bg-[#0078D4]'}`} />
-                    {idx < incident.timeline.length - 1 && <div className="w-px flex-1 bg-gray-200 min-h-[24px]" />}
-                  </div>
-                  {/* Content */}
-                  <div className="pb-3 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-[#616161]">
-                        {new Date(event.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span className={`text-[12px] font-semibold ${event.isSensitive ? 'text-[#C50F1F]' : 'text-[#242424]'}`}>{event.action}</span>
-                    </div>
-                    <div className="text-[11px] text-[#616161] mt-0.5">{event.detail}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action button */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              onClick={() => setShowEvidence(true)}
-              className="px-4 py-2 bg-[#C50F1F] text-white text-[13px] font-semibold rounded hover:bg-[#A4262C] transition-colors flex items-center gap-2"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Collect evidence
-            </button>
-            <button className="px-4 py-2 border border-gray-300 text-[13px] text-[#242424] rounded hover:bg-gray-50 transition-colors">
-              View full investigation
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Evidence Collection Modal */}
-      {showEvidence && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowEvidence(false)}>
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="relative bg-white rounded-lg shadow-2xl w-[640px] max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            {/* Modal header */}
-            <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[18px] font-semibold text-[#242424]">Collect evidence</h2>
-                <button onClick={() => setShowEvidence(false)} className="text-[#616161] hover:text-[#242424]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
-              <p className="text-[13px] text-[#616161] mt-1">Select files to include in the evidence package for eDiscovery export.</p>
-            </div>
-
-            {/* File list */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {showExportSuccess ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="#107C10"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                  <div className="text-[16px] font-semibold text-[#242424] mt-3">Evidence exported successfully</div>
-                  <div className="text-[13px] text-[#616161] mt-1">{selectedFiles.size} files sent to eDiscovery</div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 mb-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedFiles.size === incident.files.length}
-                      onChange={toggleAll}
-                      className="w-4 h-4 rounded border-gray-300 text-[#0078D4] cursor-pointer"
-                    />
-                    <span className="text-[12px] text-[#616161]">Select all ({incident.files.length} files)</span>
-                  </div>
-                  <div className="space-y-1">
-                    {incident.files.map(file => (
-                      <label
-                        key={file.id}
-                        className={`flex items-center gap-3 p-2.5 rounded border cursor-pointer transition-colors ${
-                          selectedFiles.has(file.id) ? 'bg-[#EBF3FC] border-[#0078D4]' : 'bg-white border-gray-200 hover:bg-[#FAF9F8]'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedFiles.has(file.id)}
-                          onChange={() => toggleFile(file.id)}
-                          className="w-4 h-4 rounded border-gray-300 text-[#0078D4] cursor-pointer"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-medium text-[#242424] truncate">{file.name}</div>
-                          <div className="text-[11px] text-[#616161]">{file.path} · {file.size}</div>
-                        </div>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0 ${
-                          file.sensitivityLabel.includes('PII') ? 'bg-[#FDE7E9] text-[#C50F1F]' :
-                          file.sensitivityLabel.includes('Highly') ? 'bg-[#FFF4CE] text-[#835C00]' :
-                          'bg-[#EBF3FC] text-[#0078D4]'
-                        }`}>{file.sensitivityLabel}</span>
-                      </label>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Modal footer */}
-            {!showExportSuccess && (
-              <div className="px-6 py-4 border-t border-gray-200 bg-[#FAFAFA] rounded-b-lg flex items-center justify-between">
-                <span className="text-[12px] text-[#616161]">{selectedFiles.size} files selected</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setShowEvidence(false)} className="px-4 py-2 border border-gray-300 text-[13px] text-[#242424] rounded hover:bg-gray-50 transition-colors">
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleExport}
-                    disabled={selectedFiles.size === 0}
-                    className={`px-4 py-2 text-[13px] font-semibold rounded transition-colors flex items-center gap-2 ${
-                      selectedFiles.size > 0 ? 'bg-[#0078D4] text-white hover:bg-[#106EBE]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Export to eDiscovery
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  )
-}
-
-export default function EastmanAgentDetails() {
+export default function MOSIntegrationAgentDetails() {
   const { agentId } = useParams()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const initialTab = searchParams.get('tab') || 'Overview'
-  const [activeTab, setActiveTab] = useState(initialTab)
-  const [agentState, setAgentState] = useState<{ governanceState: GovernanceState; lastReviewedDate: string | null; lastReviewedBy: string | null } | null>(null)
-  const [showReviewFlyout, setShowReviewFlyout] = useState(false)
-  const agent = demoAgents.find(r => r.agentId === agentId)
-  const incident = agentId ? exfilIncidents[agentId] : undefined
-
-  // Local governance state (so review action updates in-place)
-  const govState = agentState?.governanceState ?? agent?.governanceState ?? 'Never reviewed'
-  const govColor = getGovernanceColor(govState)
-
-  const handleMarkReviewed = () => {
-    setAgentState({ governanceState: 'Reviewed', lastReviewedDate: new Date().toISOString(), lastReviewedBy: 'You' })
-    setShowReviewFlyout(false)
-  }
+  const [activeTab, setActiveTab] = useState('Overview')
+  const agent = rows.find(r => r.agentId === agentId)
 
   if (!agent) {
     return <div className="p-6">Agent not found</div>
@@ -1649,7 +1110,7 @@ export default function EastmanAgentDetails() {
     <div className="flex flex-col h-full bg-white overflow-auto">
        {/* Breadcrumb / Back */}
        <div className="px-6 py-4 border-b border-[#E0E0E0] flex items-center gap-2">
-          <button onClick={() => navigate('/eastman')} className="text-[#0078D4] hover:underline flex items-center gap-1 text-sm font-semibold">
+          <button onClick={() => navigate('/demo')} className="text-[#0078D4] hover:underline flex items-center gap-1 text-sm font-semibold">
              &larr; Back
           </button>
           <span className="text-[#616161] text-sm">/ Agents / {agent.name}</span>
@@ -1667,33 +1128,17 @@ export default function EastmanAgentDetails() {
                       <path d="M12 8L14.5 9.44V12.33L12 13.77L9.5 12.33V9.44L12 8Z" fill="#0078D4"/>
                     </svg>
                  </div>
-                 <div className="flex-1 min-w-0">
+                 <div>
                     <h1 className="text-[20px] font-semibold text-[#242424]">{agent.name}</h1>
                     <p className="text-[12px] text-[#616161] mt-1 max-w-3xl">
                        [This agent helps the North America Sales team process new leads, pulling data from CRM and SharePoint and drafting customer profiles.]
                     </p>
                  </div>
-                 {/* Action bar — governance state + review action */}
-                 <div className="flex items-center gap-3 shrink-0 ml-auto">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium border ${govColor.bg} ${govColor.text} ${govColor.border}`}>
-                      {govState === 'Reviewed' && <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>}
-                      {govState === 'Changed since review' && <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>}
-                      {govState === 'Never reviewed' && <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M13 7h-2v6h2V7zm0 8h-2v2h2v-2z" fill="white"/></svg>}
-                      {govState}
-                    </span>
-                    <button
-                      onClick={() => setShowReviewFlyout(true)}
-                      className="px-4 py-2 text-[13px] font-semibold text-white bg-[#0078D4] rounded hover:bg-[#106EBE] transition-colors flex items-center gap-1.5"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      Review
-                    </button>
-                 </div>
               </div>
 
               {/* Tabs */}
               <div className="flex items-center gap-6 mt-6">
-                  {['Overview', 'Activities', 'Recommendations'].map((tab) => (
+                  {['Overview', 'Recommendations'].map((tab) => (
                       <div 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -1710,149 +1155,11 @@ export default function EastmanAgentDetails() {
            </div>
 
            <div className="p-8 bg-gray-50 min-h-screen">
-              {activeTab === 'Overview' && (
-                <>
-                  {incident && <IncidentSection incident={incident} />}
-                  <OverviewContent agent={agent} onOpenActivities={() => navigate(`/eastman/activity-explorer?agent=${encodeURIComponent(agent.name)}`)} />
-                </>
-              )}
-              {activeTab === 'Activities' && (
-                <>
-                  {/* Activities summary banner — orientation context */}
-                  <div className="mb-5 bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div>
-                        <div className="text-[24px] font-semibold text-[#242424]">{agent.activities30d.toLocaleString()}</div>
-                        <div className="text-[12px] text-[#616161]">Total activities (30d)</div>
-                      </div>
-                      <div className="w-px h-10 bg-gray-200" />
-                      <div>
-                        <div className="text-[24px] font-semibold text-[#A4262C]">{agent.riskTypes.length > 0 ? Math.max(3, Math.round(agent.activities30d * 0.006)) : 0}</div>
-                        <div className="text-[12px] text-[#616161]">Flagged as sensitive</div>
-                      </div>
-                      <div className="w-px h-10 bg-gray-200" />
-                      <div>
-                        <div className="text-[13px] font-medium text-[#242424]">{agent.riskTypes.length > 0 ? agent.riskTypes[0] : 'None detected'}</div>
-                        <div className="text-[12px] text-[#616161]">Top risk type</div>
-                      </div>
-                    </div>
-                    {agent.riskTypes.length > 0 && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-[#FDE7E9] rounded-md text-[12px] text-[#A4262C] font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                        Start with the red-highlighted nodes below
-                      </div>
-                    )}
-                  </div>
-                  <ActivitiesContent />
-                </>
-              )}
+              {activeTab === 'Overview' && <OverviewContent agent={agent} onOpenActivities={() => navigate(`/demo/activity-explorer?agent=${encodeURIComponent(agent.name)}`)} />}
               {activeTab === 'Recommendations' && <RecommendationsContent />}
            </div>
        </div>
-
-       {/* Review Flyout — same pattern as table flyout */}
-       {showReviewFlyout && agent && (
-         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowReviewFlyout(false)}>
-           <div className="absolute inset-0 bg-black/20" />
-           <div className="relative w-[560px] max-w-full h-full bg-white shadow-2xl flex flex-col animate-slide-in-right" onClick={e => e.stopPropagation()}>
-             {/* Header */}
-             <div className="px-6 pt-6 pb-4 border-b border-gray-200">
-               <div className="flex items-center justify-between mb-3">
-                 <h2 className="text-[18px] font-semibold text-[#242424]">Agent review</h2>
-                 <button onClick={() => setShowReviewFlyout(false)} className="text-[#616161] hover:text-[#242424] p-1">
-                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                 </button>
-               </div>
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0 border border-gray-100">
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" fill="#0078D4"/><path d="M12 5.5L17 8.39V14.17L12 17.06L7 14.17V8.39L12 5.5Z" fill="#FFFFFF"/></svg>
-                 </div>
-                 <div>
-                   <div className="text-[14px] font-semibold text-[#242424]">{agent.name}</div>
-                   <div className="text-[12px] text-[#616161]">{agent.agentCategory} · {agent.platform}</div>
-                   <div className="text-[12px] text-[#616161]">{agent.owner} · {agent.department}</div>
-                 </div>
-                 <span className={`ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium border ${govColor.bg} ${govColor.text} ${govColor.border}`}>
-                   {govState}
-                 </span>
-               </div>
-             </div>
-
-             {/* Content */}
-             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-               {/* Quick summary cards */}
-               <div className="grid grid-cols-2 gap-3">
-                 <div className="border border-gray-200 rounded-md p-3">
-                   <div className="text-[11px] text-[#616161]">Risk level</div>
-                   <div className="mt-1 text-[13px] font-medium text-[#242424]">{agent.riskLevel}</div>
-                 </div>
-                 <div className="border border-gray-200 rounded-md p-3">
-                   <div className="text-[11px] text-[#616161]">Availability</div>
-                   <div className="mt-1 text-[13px] font-medium text-[#242424]">{agent.availability}</div>
-                 </div>
-                 <div className="border border-gray-200 rounded-md p-3">
-                   <div className="text-[11px] text-[#616161]">Policy coverage</div>
-                   <div className="mt-1 text-[13px] font-medium text-[#242424]">{agent.hasDLP ? `${agent.dlpPolicyCount} policies` : 'No policy'}</div>
-                 </div>
-                 <div className="border border-gray-200 rounded-md p-3">
-                   <div className="text-[11px] text-[#616161]">Activities (30d)</div>
-                   <div className="mt-1 text-[13px] font-medium text-[#242424]">{agent.activities30d.toLocaleString()}</div>
-                 </div>
-               </div>
-
-               {/* Risk types */}
-               {agent.riskTypes.length > 0 && (
-                 <div>
-                   <div className="text-[12px] font-semibold text-[#242424] mb-2">Risk types</div>
-                   <div className="flex flex-wrap gap-2">
-                     {agent.riskTypes.map(rt => {
-                       const c = getRiskTypeColor(rt)
-                       return <span key={rt} className={`px-2.5 py-1 rounded-full text-[12px] font-medium ${c.bg} ${c.text}`}>{rt}</span>
-                     })}
-                   </div>
-                 </div>
-               )}
-
-               {/* Review history */}
-               <div>
-                 <div className="text-[12px] font-semibold text-[#242424] mb-2">Review history</div>
-                 <div className="border border-gray-200 rounded-md">
-                   {(agentState?.lastReviewedDate || agent.lastReviewedDate) ? (
-                     <div className="p-3">
-                       <div className="text-[12px] text-[#242424]">Last reviewed on {new Date(agentState?.lastReviewedDate || agent.lastReviewedDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                       <div className="text-[11px] text-[#616161]">by {agentState?.lastReviewedBy || agent.lastReviewedBy}</div>
-                     </div>
-                   ) : (
-                     <div className="p-3 text-[12px] text-[#616161]">This agent has never been reviewed.</div>
-                   )}
-                 </div>
-               </div>
-
-               {/* Owner */}
-               <div>
-                 <div className="text-[12px] font-semibold text-[#242424] mb-2">Owner</div>
-                 <div className="border border-gray-200 rounded-md p-3">
-                   <div className="text-[13px] text-[#242424] font-medium">{agent.owner}</div>
-                   <div className="text-[11px] text-[#616161]">{agent.ownerEmail} · {agent.department}</div>
-                 </div>
-               </div>
-             </div>
-
-             {/* Footer */}
-             <div className="px-6 py-4 border-t border-gray-200 bg-[#FAFAFA] flex items-center gap-3">
-               <button
-                 onClick={handleMarkReviewed}
-                 className="px-4 py-2 bg-[#0078D4] text-white text-[13px] font-semibold rounded hover:bg-[#106EBE] transition-colors"
-               >
-                 {govState === 'Changed since review' ? 'Re-review & approve' : 'Mark as reviewed'}
-               </button>
-               <button onClick={() => setShowReviewFlyout(false)} className="px-4 py-2 border border-gray-300 text-[13px] text-[#242424] rounded hover:bg-gray-50 transition-colors">
-                 Cancel
-               </button>
-             </div>
-           </div>
-         </div>
-       )}
     </div>
   )
 }
+

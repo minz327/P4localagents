@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import MainLayout from './components/MainLayout'
+import DlpLayout from './components/DlpLayout'
 import Overview from './pages/Overview'
 import AgentDetails from './pages/AgentDetails'
 import ProposalOverview from './pages/proposal/ProposalOverview'
@@ -17,6 +18,10 @@ import EastmanAgentDetails from './pages/eastman/EastmanAgentDetails'
 import EastmanActivityExplorer from './pages/eastman/EastmanActivityExplorer'
 import ClevelandOverview from './pages/cleveland/ClevelandOverview'
 import ClevelandAgentDetails from './pages/cleveland/ClevelandAgentDetails'
+import MOSIntegrationOverview from './pages/mosintegration/MOSIntegrationOverview'
+import MOSIntegrationAgentDetails from './pages/mosintegration/MOSIntegrationAgentDetails'
+import MOSIntegrationActivityExplorer from './pages/mosintegration/MOSIntegrationActivityExplorer'
+import EastmanDlpAlerts from './pages/eastman/EastmanDlpAlerts'
 
 export default function App() {
   return (
@@ -45,6 +50,14 @@ export default function App() {
           {/* Cleveland routes — spike-to-action investigation prototype (cloned from proposal) */}
           <Route path="cleveland" element={<ClevelandOverview />} />
           <Route path="cleveland/agents/:agentId" element={<ClevelandAgentDetails />} />
+          {/* MOSIntegration routes — cloned from demo */}
+          <Route path="mosintegration" element={<MOSIntegrationOverview />} />
+          <Route path="mosintegration/agents/:agentId" element={<MOSIntegrationAgentDetails />} />
+          <Route path="mosintegration/activity-explorer" element={<MOSIntegrationActivityExplorer />} />
+        </Route>
+        {/* DLP routes — separate layout with DLP sidebar */}
+        <Route path="/dlp" element={<DlpLayout />}>
+          <Route path="alerts" element={<EastmanDlpAlerts />} />
         </Route>
       </Routes>
     </BrowserRouter>

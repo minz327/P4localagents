@@ -107,6 +107,7 @@ function GovernancePill({ state, onClick }: { state: GovernanceState; onClick?: 
 // ── Review flyout (Flow 2) ────────────────────────────────────────
 
 function ReviewFlyout({ agent, onClose, onMarkReviewed }: { agent: DemoAgent; onClose: () => void; onMarkReviewed: () => void }) {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'overview' | 'changes'>('overview')
   const hasChanges = agent.governanceState === 'Changed since review' && agent.changes && agent.changes.length > 0
 
@@ -128,6 +129,13 @@ function ReviewFlyout({ agent, onClose, onMarkReviewed }: { agent: DemoAgent; on
               <div className="text-[14px] font-semibold text-[#242424]">{agent.name}</div>
               <div className="text-[12px] text-[#616161]">{agent.agentCategory} · {agent.platform}</div>
               <div className="text-[12px] text-[#616161]">{agent.owner} · {agent.department}</div>
+              <button
+                onClick={() => navigate(`/eastman/agents/${agent.agentId}`)}
+                className="text-[12px] text-[#0078D4] hover:underline mt-1 flex items-center gap-1 font-medium"
+              >
+                View full details
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              </button>
             </div>
             <GovernancePill state={agent.governanceState} />
           </div>

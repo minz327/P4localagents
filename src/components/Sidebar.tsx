@@ -19,9 +19,9 @@ import {
 
 const InsiderRiskIcon = () => <ShieldPerson20Regular style={{ fontSize: 20 }} />
 
-function LeftRailItem({ icon, label, active }: { icon: React.ReactNode; label: string; active?: boolean }) {
+function LeftRailItem({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void }) {
   return (
-    <div className={`flex flex-col items-center py-3 cursor-pointer group relative ${active ? 'text-[#0078D4]' : 'text-[#616161] hover:text-[#242424]'}`}>
+    <div onClick={onClick} className={`flex flex-col items-center py-3 cursor-pointer group relative ${active ? 'text-[#0078D4]' : 'text-[#616161] hover:text-[#242424]'}`}>
       {active && <div className="absolute left-0 top-2 bottom-2 w-1 bg-[#0078D4] rounded-r" />}
       <div className="mb-1">{icon}</div>
       <span className="text-[10px] text-center leading-3 px-1">{label}</span>
@@ -88,7 +88,7 @@ export default function Sidebar() {
         <div className="w-8 h-px bg-[#E0E0E0] my-1" />
 
         <LeftRailItem icon={<InsiderRiskIcon />} label="Insider Risk Managem..." />
-        <LeftRailItem icon={<DLPIcon />} label="Data Loss Prevention" />
+        <LeftRailItem icon={<DLPIcon />} label="Data Loss Prevention" onClick={() => navigate('/dlp/alerts')} />
         <LeftRailItem icon={<DSPMIcon />} label="DSPM (preview)" active />
       </div>
 
