@@ -6,6 +6,7 @@ export default defineConfig(async () => {
   const react = (mod && (mod as any).default) || mod
 
   return {
+    base: '/P4A365BwCPrototype/',
     plugins: [react()],
     server: {
       host: 'localhost',

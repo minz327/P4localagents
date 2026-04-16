@@ -122,6 +122,9 @@ export default function MOSIntegrationMetrics({ rows }: { rows: MOSAgentRow[] })
               <div className="text-[28px] font-semibold text-[#242424] leading-none">{allLow}</div>
             </div>
           </div>
+          <div className="mt-3 pt-2 border-t border-[#F3F2F1]">
+            <span className="text-[11px] text-[#616161]">Last 30 days activity</span>
+          </div>
         </Card>
 
         {/* Card 4: Sensitive interactions (combined) */}
@@ -151,6 +154,9 @@ export default function MOSIntegrationMetrics({ rows }: { rows: MOSAgentRow[] })
                 <Trend value="No change" type="neutral" />
               </div>
             </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-[#F3F2F1]">
+            <span className="text-[11px] text-[#616161]">Last 30 days activity</span>
           </div>
         </Card>
       </div>

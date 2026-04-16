@@ -67,7 +67,7 @@ export default function MOSIntegrationOverview() {
 
           <div className="mb-4 mt-8">
             <div className="text-[18px] font-semibold text-[#242424]">Key metrics</div>
-            <div className="text-[14px] text-[#242424] mt-1">Metrics for your organization and trends in the last 30 days.</div>
+            <div className="text-[14px] text-[#242424] mt-1">Overview of agents and AI apps across your organization.</div>
           </div>
 
           <MOSIntegrationMetrics rows={mosRows} />

@@ -25,7 +25,7 @@ import EastmanDlpAlerts from './pages/eastman/EastmanDlpAlerts'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/P4A365BwCPrototype">
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Overview />} />
