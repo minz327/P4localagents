@@ -2,7 +2,7 @@
 
 > **Last updated:** March 26, 2026
 > **Primary author:** Min Zhou (minz@microsoft.com)
-> **Repo:** https://github.com/minz_microsoft/P4A365Prototype
+> **Repo:** https://github.com/minz_microsoft/P4A365BwCPrototype
 > **Live site:** https://purview-ai-observability-h3cwduabdycvd8ec.westus3-01.azurewebsites.net
 
 ---

@@ -11,6 +11,7 @@ export type AgentRow = {
   dataProtection: string // e.g. "0 Policies"
   dataCompliance: string // e.g. "0 Policies"
   authentication?: string
+  hosting?: 'cloud' | 'local'
 }
 
 export const rows: AgentRow[] = [
@@ -26,7 +27,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: null,
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'cloud'
   },
   {
     name: 'ADO Agent POC',
@@ -39,7 +41,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: null,
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'local'
   },
   {
     name: 'AborseAgentJan092026',
@@ -52,7 +55,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 0, 2, 5, 1, 0, 0],
     dataProtection: '1 Policy',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'cloud'
   },
   {
     name: 'Accounting Agent',
@@ -65,7 +69,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 5, 10, 5, 0],
     dataProtection: '2 Policies',
     dataCompliance: '1 Policy',
-    authentication: 'Shared Key'
+    authentication: 'Shared Key',
+    hosting: 'cloud'
   },
   // 15 High Risk - Enterprise Critical Functions
   {
@@ -79,7 +84,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 15, 30, 25, 0],
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'cloud'
   },
   {
     name: 'Executive Payroll Auditor',
@@ -92,7 +98,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 30, 0, 0, 0, 0, 0],
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Shared Key'
+    authentication: 'Shared Key',
+    hosting: 'local'
   },
   {
     name: 'Patent Application Generator',
@@ -105,7 +112,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 10, 30, 0, 20, 15, 0],
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'local'
   },
   {
     name: 'Q3 Financial Earnings Bot',
@@ -118,7 +126,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 15, 0, 0, 0, 20, 0, 0, 0, 0, 0, 8, 0, 0, 0],
     dataProtection: '0 Policies',
     authentication: 'Access Key',
-    dataCompliance: '0 Policies'
+    dataCompliance: '0 Policies',
+    hosting: 'cloud'
   },
   {
     name: 'Customer PII Retriever',
@@ -131,7 +140,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [0, 0, 0, 0, 2, 20, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     dataProtection: '0 Policies',
     authentication: 'Entra ID',
-    dataCompliance: '0 Policies'
+    dataCompliance: '0 Policies',
+    hosting: 'local'
   },
   {
     name: 'Source Code Vulnerability Scanner',
@@ -144,7 +154,8 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [10, 20, 5, 0, 0, 15, 0, 0, 30, 0, 0, 10, 15, 0, 0, 0],
     dataProtection: '0 Policies',
     authentication: 'Shared Key',
-    dataCompliance: '0 Policies'
+    dataCompliance: '0 Policies',
+    hosting: 'cloud'
   },
   {
     name: 'Litigation Hold Search',
@@ -157,6 +168,7 @@ export const rows: AgentRow[] = [
     sensitiveActivityTrend: [5, 5, 5, 10, 20, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     dataProtection: '0 Policies',
     dataCompliance: '0 Policies',
-    authentication: 'Entra ID'
+    authentication: 'Entra ID',
+    hosting: 'local'
   }
 ]

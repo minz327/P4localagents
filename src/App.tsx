@@ -22,10 +22,13 @@ import MOSIntegrationOverview from './pages/mosintegration/MOSIntegrationOvervie
 import MOSIntegrationAgentDetails from './pages/mosintegration/MOSIntegrationAgentDetails'
 import MOSIntegrationActivityExplorer from './pages/mosintegration/MOSIntegrationActivityExplorer'
 import EastmanDlpAlerts from './pages/eastman/EastmanDlpAlerts'
+import LocalAgentsOverview from './pages/local-agents/LocalAgentsOverview'
+import LocalAgentsAgentDetails from './pages/local-agents/LocalAgentsAgentDetails'
+import LocalAgentsActivityExplorer from './pages/local-agents/LocalAgentsActivityExplorer'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/P4A365BwCPrototype">
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Overview />} />
@@ -54,6 +57,10 @@ export default function App() {
           <Route path="mosintegration" element={<MOSIntegrationOverview />} />
           <Route path="mosintegration/agents/:agentId" element={<MOSIntegrationAgentDetails />} />
           <Route path="mosintegration/activity-explorer" element={<MOSIntegrationActivityExplorer />} />
+          {/* Local Agents routes — cloned from demo for local agent scenarios */}
+          <Route path="local-agents" element={<LocalAgentsOverview />} />
+          <Route path="local-agents/agents/:agentId" element={<LocalAgentsAgentDetails />} />
+          <Route path="local-agents/activity-explorer" element={<LocalAgentsActivityExplorer />} />
         </Route>
         {/* DLP routes — separate layout with DLP sidebar */}
         <Route path="/dlp" element={<DlpLayout />}>
