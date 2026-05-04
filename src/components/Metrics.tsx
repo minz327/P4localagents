@@ -52,6 +52,7 @@ export interface MetricsData {
   mediumRisk: number
   lowRisk: number
   sensitive: { oversharing: number; exfiltration: number; unethical: number }
+  tabLabel?: string  // e.g. "cloud agents", "local agents" — omit for "all"
 }
 
 export default function Metrics({ data: propData }: { data?: MetricsData }) {
@@ -69,19 +70,22 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
     }
   }
 
+  const isFiltered = !!data.tabLabel;
+  const agentLabel = data.tabLabel || 'total agents';
+
   return (
     <section>
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-5">
         <Card>
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.totalApps} total AI apps and agents
+            {data.totalApps} {agentLabel}
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[80px] 2xl:gap-[120px]">
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Active <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
                 <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.active}</div>
-                <Trend value="3%" type="positive" />
+                {isFiltered ? <Trend value="—" type="neutral" /> : <Trend value="3%" type="positive" />}
               </div>
             </div>
             <div>
@@ -98,7 +102,7 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
 
         <Card>
            <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.highRisk} high risk agents
+            {data.highRisk} high risk {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[40px] 2xl:gap-[80px]">
             <div>
@@ -118,28 +122,28 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
 
         <Card>
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical} agents with sensitive interactions
+            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical} {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'} with sensitive interactions
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[30px] 2xl:gap-[60px]">
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Oversharing <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
                 <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.sensitive.oversharing}</div>
-                <Trend value="120%" type="negative" />
+                {isFiltered ? <Trend value="—" type="neutral" /> : <Trend value="120%" type="negative" />}
               </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Exfiltration <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
                 <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.sensitive.exfiltration}</div>
-                <Trend value="No change" type="neutral" />
+                <Trend value={isFiltered ? "—" : "No change"} type="neutral" />
               </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Unethical <InfoIcon /></div>
               <div className="flex items-baseline gap-2">
                 <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.sensitive.unethical}</div>
-                <Trend value="No change" type="neutral" />
+                <Trend value={isFiltered ? "—" : "No change"} type="neutral" />
               </div>
             </div>
           </div>

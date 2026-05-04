@@ -60,7 +60,7 @@ export default function LocalAgentsOverview() {
   const filteredRows = React.useMemo(() => {
     if (activeTab === 'all') return rows;
     if (activeTab === 'cloud') return rows.filter(r => r.hosting === 'cloud');
-    if (activeTab === 'devices') return rows.filter(r => r.type === 'user');
+    if (activeTab === 'devices') return rows.filter(r => r.hosting === 'local');
     return rows;
   }, [activeTab]);
 
@@ -74,13 +74,14 @@ export default function LocalAgentsOverview() {
     const oversharing = filteredRows.filter(r => r.riskType.includes('Oversharing')).length;
     const exfiltration = filteredRows.filter(r => r.riskType.includes('Exfiltration')).length;
     const unethical = filteredRows.filter(r => r.riskType.includes('Unethical')).length;
-    return { totalApps: total, active, inactive, highRisk, mediumRisk, lowRisk, sensitive: { oversharing, exfiltration, unethical } };
-  }, [filteredRows]);
+    const tabLabel = activeTab === 'cloud' ? 'cloud agents' : activeTab === 'devices' ? 'local agents' : undefined;
+    return { totalApps: total, active, inactive, highRisk, mediumRisk, lowRisk, sensitive: { oversharing, exfiltration, unethical }, tabLabel };
+  }, [filteredRows, activeTab]);
 
   const tabCounts = React.useMemo(() => ({
     all: rows.length,
     cloud: rows.filter(r => r.hosting === 'cloud').length,
-    devices: rows.filter(r => r.type === 'user').length,
+    devices: rows.filter(r => r.hosting === 'local').length,
   }), []);
 
   return (
@@ -123,7 +124,11 @@ export default function LocalAgentsOverview() {
 
           <div className="mb-4">
             <div className="text-[18px] font-semibold text-[#242424]">Key metrics</div>
-            <div className="text-[14px] text-[#242424] mt-1">Metrics for your organization and trends in the last 30 days.</div>
+            <div className="text-[14px] text-[#242424] mt-1">
+              {activeTab === 'all' 
+                ? 'Metrics for your organization and trends in the last 30 days.'
+                : `Showing metrics for ${activeTab === 'cloud' ? 'Cloud Agents' : 'Local Agents'}.`}
+            </div>
           </div>
 
           <Metrics data={metricsData} />
