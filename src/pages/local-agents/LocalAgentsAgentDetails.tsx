@@ -927,8 +927,8 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                   </div>
               </div>
 
-              {/* Top risks row (local agents - show risk types below) */}
-              {isLocal && (
+              {/* Top risks row (cloud agents only - local uses trend chart) */}
+              {!isLocal && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="text-[12px] text-[#616161] font-semibold mb-3">Top risks:</div>
                   <div className="grid grid-cols-3 gap-6">
