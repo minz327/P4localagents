@@ -30,7 +30,16 @@ function Banner() {
   )
 }
 
-function Toolbar() {
+function Toolbar({ groupBy, setGroupBy, activeTab }: { groupBy: 'none' | 'platform' | 'user' | 'device'; setGroupBy: (fn: (g: 'none' | 'platform' | 'user' | 'device') => 'none' | 'platform' | 'user' | 'device') => void; activeTab: string }) {
+    const [groupOpen, setGroupOpen] = React.useState(false)
+    const groupRef = React.useRef<HTMLDivElement>(null)
+
+    React.useEffect(() => {
+      const handler = (e: MouseEvent) => { if (groupRef.current && !groupRef.current.contains(e.target as Node)) setGroupOpen(false) }
+      document.addEventListener('mousedown', handler)
+      return () => document.removeEventListener('mousedown', handler)
+    }, [])
+
     return (
         <div className="flex justify-between items-center mt-6 mb-2">
             <div className="flex items-center gap-4">
@@ -43,12 +52,33 @@ function Toolbar() {
                     Export
                  </button>
             </div>
-            <div>
-                 <button className="flex items-center gap-2 text-sm text-[#242424] hover:bg-gray-100 px-2 py-1 rounded">
+            <div ref={groupRef} className="relative">
+                 <button
+                    onClick={() => setGroupOpen(!groupOpen)}
+                    className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded ${groupBy !== 'none' ? 'bg-[#EBF3FC] text-[#0078D4] border border-[#0078D4]' : 'text-[#242424] hover:bg-gray-100'}`}
+                 >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/><path d="M5 3v10M2 7h12" stroke="currentColor" strokeWidth="1.5"/></svg>
                     Group
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 3l4 4M7 3l-4 4" stroke="#242424" strokeWidth="1" strokeLinecap="round"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                  </button>
+                 {groupOpen && (
+                   <div className="absolute right-0 top-full mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+                     {[
+                       { key: 'none' as const, label: 'None' },
+                       { key: 'platform' as const, label: 'Platform' },
+                       ...(activeTab !== 'all' ? [
+                         { key: 'user' as const, label: 'Used by' },
+                         { key: 'device' as const, label: 'Device' },
+                       ] : []),
+                     ].map(opt => (
+                       <div
+                         key={opt.key}
+                         onClick={() => { setGroupBy(() => opt.key); setGroupOpen(false) }}
+                         className={`px-4 py-2 text-[13px] cursor-pointer hover:bg-[#F5F5F5] ${groupBy === opt.key ? 'text-[#0078D4] font-semibold' : 'text-[#242424]'}`}
+                       >{opt.label}</div>
+                     ))}
+                   </div>
+                 )}
             </div>
         </div>
     )
@@ -56,6 +86,7 @@ function Toolbar() {
 
 export default function LocalAgentsOverview() {
   const [activeTab, setActiveTab] = useState<'all' | 'cloud' | 'devices'>('all');
+  const [groupBy, setGroupBy] = useState<'none' | 'platform' | 'user' | 'device'>('none');
 
   const filteredRows = React.useMemo(() => {
     if (activeTab === 'all') return rows;
@@ -133,10 +164,10 @@ export default function LocalAgentsOverview() {
 
           <Metrics data={metricsData} />
           
-          <Toolbar />
+          <Toolbar groupBy={groupBy} setGroupBy={setGroupBy} activeTab={activeTab} />
 
           <div className="mt-2 text-[#616161]">
-            <Agents activeTab={activeTab} />
+            <Agents activeTab={activeTab} groupBy={groupBy} />
           </div>
         </div>
       </main>

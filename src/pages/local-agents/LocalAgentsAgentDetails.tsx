@@ -726,6 +726,7 @@ function ActivitiesContent() {
 }
 
 function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivities: () => void }) {
+    const isLocal = agent?.hosting === 'local'
     const trendData = Array.from({ length: 30 }, (_, index) => {
         const oversharing = [4, 9, 14, 22].includes(index) ? 1 : 0
         const exfiltration = [14, 26].includes(index) ? 1 : 0
@@ -755,30 +756,38 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
               <div>
                   <div className="text-[#616161] mb-1">Status</div>
                   <div className="flex items-center gap-1.5">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="#107C10"><circle cx="6" cy="6" r="6" /><path d="M3.5 6L5 7.5L8.5 4" stroke="white" strokeWidth="1.5" fill="none"/></svg>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill={agent.status === 'Active' ? '#107C10' : '#616161'}><circle cx="6" cy="6" r="6" /><path d="M3.5 6L5 7.5L8.5 4" stroke="white" strokeWidth="1.5" fill="none"/></svg>
                       <span className="text-[#242424] font-medium">{agent.status}</span>
                   </div>
               </div>
               <div>
-                  <div className="text-[#616161] mb-1">Collection</div>
+                  <div className="text-[#616161] mb-1">{isLocal ? 'Platform' : 'Collection'}</div>
+                  {isLocal ? (
+                    <div className="text-[#242424]">{agent.platform}</div>
+                  ) : (
                   <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-1.5 py-0.5 border border-[#107C10] text-[#107C10] rounded-sm text-[10px] bg-green-50 flex items-center gap-1"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Global</span>
                       <span className="px-1.5 py-0.5 bg-gray-100 text-[#242424] rounded-sm text-[10px]">Sales team</span>
                       <span className="px-1.5 py-0.5 border border-[#C50F1F] text-[#C50F1F] rounded-sm text-[10px] bg-red-50 flex items-center gap-1"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Quarantined</span>
                   </div>
+                  )}
               </div>
               <div>
-                  <div className="text-[#616161] mb-1">Platform</div>
-                  <div className="text-[#242424]">Agent 365</div>
+                  <div className="text-[#616161] mb-1">{isLocal ? 'Device' : 'Platform'}</div>
+                  <div className="text-[#242424]">{isLocal ? agent.device : 'Agent 365'}</div>
               </div>
               <div>
-                  <div className="text-[#616161] mb-1">Knowledge sources and tools</div>
+                  <div className="text-[#616161] mb-1">{isLocal ? 'Agent ID' : 'Knowledge sources and tools'}</div>
+                  {isLocal ? (
+                    <div className="text-[#242424] text-[13px] font-mono">{agent.agentId}</div>
+                  ) : (
                   <div className="flex flex-wrap gap-1">
                       {['SharePoint', 'CRM-MCP','Salesforce-MCP', 'Outlook', 'Teams'].map(t => (
                           <span key={t} className="px-1.5 py-0.5 bg-gray-100 text-[#242424] rounded text-[11px] border border-gray-200">{t}</span>
                       ))}
                       <span className="px-1.5 py-0.5 bg-gray-100 text-[#242424] rounded text-[11px] border border-gray-200">+2</span>
                   </div>
+                  )}
               </div>
 
               {/* Row 2 */}
@@ -792,21 +801,25 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                   <div className="text-[#242424] text-[13px]">Nov 3, 2025</div>
               </div>
               <div>
-                  <div className="text-[#616161] mb-1">Owner</div>
+                  <div className="text-[#616161] mb-1">{isLocal ? 'Used by' : 'Owner'}</div>
                   <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#E1DFDD] flex items-center justify-center text-[10px] font-semibold text-[#616161]">JB</div>
+                      <div className="w-6 h-6 rounded-full bg-[#E1DFDD] flex items-center justify-center text-[10px] font-semibold text-[#616161]">{isLocal ? (agent.initials || '?') : 'JB'}</div>
                       <div>
-                          <div className="text-[#242424] text-[13px] leading-tight">John Brown</div>
-                          <div className="text-[#616161] text-[11px] leading-tight">johnbrown@contoso.com</div>
+                          <div className="text-[#242424] text-[13px] leading-tight">{isLocal ? agent.userName : 'John Brown'}</div>
+                          <div className="text-[#616161] text-[11px] leading-tight">{isLocal ? agent.device : 'johnbrown@contoso.com'}</div>
                       </div>
                   </div>
               </div>
+              {!isLocal && (
               <div>
                   <div className="text-[#616161] mb-1">Agent ID</div>
                   <div className="text-[#242424] text-[13px] font-mono">{agent.agentId}</div>
               </div>
+              )}
 
-              {/* Row 3 */}
+              {/* Row 3 - cloud only */}
+              {!isLocal && (
+              <>
               <div>
                   <div className="text-[#616161] mb-1">Instance of</div>
                   <div className="flex items-center gap-1 text-[#0078D4] text-[13px] hover:underline cursor-pointer">
@@ -817,6 +830,8 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                   <div className="text-[#616161] mb-1">Agent user ID</div>
                   <div className="text-[#242424] text-[13px]">a-riley.sales@contoso.com</div>
               </div>
+              </>
+              )}
           </div>
       </div>
 
@@ -841,14 +856,31 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
               <div className="flex items-center gap-2 mb-1">
                   <span className="text-[#C50F1F] font-bold text-lg">High risk</span>
               </div>
-              <div className="flex gap-1 mb-6">
+              <div className="flex gap-1 mb-4">
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-gray-200"></div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-8 border-t border-gray-100 pt-6">
+
+              {/* Interaction + Session summary */}
+              <div className="mb-6 space-y-1">
+                  <div className="text-[13px] text-[#242424]">
+                      <span className="font-semibold text-[#C50F1F]">8 high-risk interactions</span>
+                      <span className="text-[#616161]"> (42 total)</span>
+                  </div>
+                  {isLocal && agent.sessions && agent.sessions.total > 0 && (
+                      <div className="text-[12px] text-[#616161]">
+                          Across <span className="font-medium text-[#616161]">{agent.sessions.highRisk} high-risk session{agent.sessions.highRisk !== 1 ? 's' : ''}</span> ({agent.sessions.total} total)
+                          <span className="mx-2">·</span>
+                          <a href="#" className="text-[#0078D4] hover:underline">View in Insider Risk Management →</a>
+                      </div>
+                  )}
+              </div>
+
+              {/* Risk breakdown */}
+              <div className="text-[11px] text-[#616161] uppercase tracking-wide font-semibold mb-3">Risk breakdown</div>
+              <div className="grid grid-cols-3 gap-8 mb-4">
                  {['Oversharing', 'Exfiltration', 'Unethical'].map((type, i) => (
                      <div key={type}>
                           <div className="flex items-baseline gap-1">
@@ -867,8 +899,8 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
           {/* Trend Chart */}
           <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
                <div className="mb-6">
-                   <h3 className="text-sm font-bold text-[#242424]">Sensitive activity trend</h3>
-                   <p className="text-xs text-[#616161] mt-1">Agent activities that contain sensitive information types</p>
+                   <h3 className="text-sm font-bold text-[#242424]">Risk activity trend</h3>
+                   <p className="text-xs text-[#616161] mt-1">Risk signals across agent interactions over time</p>
                    <div className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] inline-flex items-center gap-1 px-1 rounded mt-2">
                        <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
                        54% in the past 30 days
@@ -1101,6 +1133,7 @@ export default function DemoAgentDetails() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Overview')
   const agent = rows.find(r => r.agentId === agentId)
+  const isLocal = agent?.hosting === 'local'
 
   if (!agent) {
     return <div className="p-6">Agent not found</div>
@@ -1113,7 +1146,7 @@ export default function DemoAgentDetails() {
           <button onClick={() => navigate('/local-agents')} className="text-[#0078D4] hover:underline flex items-center gap-1 text-sm font-semibold">
              &larr; Back
           </button>
-          <span className="text-[#616161] text-sm">/ Agents / {agent.name}</span>
+          <span className="text-[#616161] text-sm">/ {isLocal ? 'Local Agents' : 'Agents'} / {isLocal ? `${agent.userName} (${agent.device})` : agent.name}</span>
        </div>
 
        <div className="w-full">
@@ -1121,17 +1154,22 @@ export default function DemoAgentDetails() {
            <div className="bg-white px-8 pt-6 pb-0 shadow-sm border-b border-gray-200">
               <div className="flex items-start gap-4 mb-4">
                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shrink-0 border border-gray-100 shadow-sm">
-                    {/* Placeholder Icon - Blue Hexagon */}
+                    {isLocal ? (
+                      <div className="w-10 h-10 rounded-full bg-[#FFF4CE] text-[#785C34] flex items-center justify-center text-[14px] font-semibold">
+                        {agent.initials || '?'}
+                      </div>
+                    ) : (
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                       <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" fill="#0078D4"/>
                       <path d="M12 5.5L17 8.39V14.17L12 17.06L7 14.17V8.39L12 5.5Z" fill="#FFFFFF"/>
                       <path d="M12 8L14.5 9.44V12.33L12 13.77L9.5 12.33V9.44L12 8Z" fill="#0078D4"/>
                     </svg>
+                    )}
                  </div>
                  <div>
-                    <h1 className="text-[20px] font-semibold text-[#242424]">{agent.name}</h1>
+                    <h1 className="text-[20px] font-semibold text-[#242424]">{isLocal ? `${agent.userName} (${agent.device})` : agent.name}</h1>
                     <p className="text-[12px] text-[#616161] mt-1 max-w-3xl">
-                       [This agent helps the North America Sales team process new leads, pulling data from CRM and SharePoint and drafting customer profiles.]
+                       {isLocal ? `Using ${agent.platform}` : '[This agent helps the North America Sales team process new leads, pulling data from CRM and SharePoint and drafting customer profiles.]'}
                     </p>
                  </div>
               </div>

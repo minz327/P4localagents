@@ -25,6 +25,8 @@ import EastmanDlpAlerts from './pages/eastman/EastmanDlpAlerts'
 import LocalAgentsOverview from './pages/local-agents/LocalAgentsOverview'
 import LocalAgentsAgentDetails from './pages/local-agents/LocalAgentsAgentDetails'
 import LocalAgentsActivityExplorer from './pages/local-agents/LocalAgentsActivityExplorer'
+import LocalAgentsSessions from './pages/local-agents/LocalAgentsSessions'
+import LocalAgentDetail from './pages/local-agents/LocalAgentDetail'
 
 export default function App() {
   return (
@@ -61,6 +63,8 @@ export default function App() {
           <Route path="local-agents" element={<LocalAgentsOverview />} />
           <Route path="local-agents/agents/:agentId" element={<LocalAgentsAgentDetails />} />
           <Route path="local-agents/activity-explorer" element={<LocalAgentsActivityExplorer />} />
+          <Route path="local-agents/sessions" element={<LocalAgentsSessions />} />
+          <Route path="local-agents/detail" element={<LocalAgentDetail />} />
         </Route>
         {/* DLP routes — separate layout with DLP sidebar */}
         <Route path="/dlp" element={<DlpLayout />}>

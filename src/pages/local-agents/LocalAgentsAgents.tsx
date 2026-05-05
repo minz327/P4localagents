@@ -26,8 +26,9 @@ function AppIcon({ type, initials, icon }: { type: 'app' | 'user'; initials?: st
 function RiskLevel({ level }: { level: AgentRow['riskLevel'] }) {
   let colors = ['bg-[#E0E0E0]', 'bg-[#E0E0E0]', 'bg-[#E0E0E0]']
   if (level === 'High') colors = ['bg-[#A4262C]', 'bg-[#A4262C]', 'bg-[#A4262C]']
-  if (level === 'Low') colors = ['bg-[#D83B01]', 'bg-[#D83B01]', 'bg-[#E0E0E0]']
-  if (level === 'None') colors = ['bg-[#605E5C]', 'bg-[#605E5C]', 'bg-[#605E5C]']
+  if (level === 'Medium') colors = ['bg-[#D83B01]', 'bg-[#D83B01]', 'bg-[#E0E0E0]']
+  if (level === 'Low') colors = ['bg-[#D83B01]', 'bg-[#E0E0E0]', 'bg-[#E0E0E0]']
+  if (level === 'None') colors = ['bg-[#E0E0E0]', 'bg-[#E0E0E0]', 'bg-[#E0E0E0]']
   return (
     <div className="flex items-center gap-3">
       <div className="flex gap-[2px]">
@@ -52,15 +53,165 @@ function Sparkline({ data }: { data: number[] | null }) {
   )
 }
 
-export default function LocalAgentsAgents({ activeTab = 'all' }: { activeTab?: 'all' | 'cloud' | 'devices' }) {
+// Filter dropdown component
+function FilterPill({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (val: string) => void }) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <div
+        onClick={() => setOpen(!open)}
+        className={`px-3 py-1 rounded-full cursor-pointer flex items-center gap-1 text-[#242424] ${value !== 'Any' ? 'bg-[#EBF3FC] border border-[#0078D4] text-[#0078D4]' : 'bg-[#F3F2F1] hover:bg-[#E1DFDD]'}`}
+      >
+        {label}: <span className="font-semibold">{value}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+          <div
+            onClick={() => { onChange('Any'); setOpen(false) }}
+            className={`px-4 py-2 text-[13px] cursor-pointer hover:bg-[#F5F5F5] ${value === 'Any' ? 'text-[#0078D4] font-semibold' : 'text-[#242424]'}`}
+          >Any</div>
+          {options.map(opt => (
+            <div
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false) }}
+              className={`px-4 py-2 text-[13px] cursor-pointer hover:bg-[#F5F5F5] ${value === opt ? 'text-[#0078D4] font-semibold' : 'text-[#242424]'}`}
+            >{opt}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Logical column order per tab — designed for scan path
+const cloudColumns = [
+  { label: 'Name', key: 'name' },
+  { label: 'Status', key: 'status' },
+  { label: 'Platform', key: 'platform' },
+  { label: 'Agent ID', key: 'agentId' },
+  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
+  { label: 'Risk types', key: 'riskType' },
+  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
+  { label: 'Policies', key: 'dataProtection' },
+]
+
+const localColumns = [
+  { label: 'Used by', key: 'userName' },
+  { label: 'Device', key: 'device' },
+  { label: 'Platform', key: 'platform' },
+  { label: 'Status', key: 'status' },
+  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
+  { label: 'Risk types', key: 'riskType' },
+  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
+  { label: 'Policies', key: 'dataProtection' },
+  { label: 'Agent ID', key: 'agentId' },
+]
+
+const allColumns = [
+  { label: 'Name', key: 'name' },
+  { label: 'Type', key: 'hosting', w: 'min-w-[100px]' },
+  { label: 'Status', key: 'status' },
+  { label: 'Platform', key: 'platform' },
+  { label: 'Agent ID', key: 'agentId' },
+  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
+  { label: 'Risk types', key: 'riskType' },
+  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
+  { label: 'Policies', key: 'dataProtection' },
+]
+
+function PoliciesCell({ row }: { row: AgentRow }) {
+  const p = parseInt(row.dataProtection) || 0;
+  const c = parseInt(row.dataCompliance) || 0;
+  const total = p + c;
+  return <>{total === 0 ? '0 Policies' : total === 1 ? '1 Policy' : `${total} Policies`}</>;
+}
+
+function TypeBadge({ hosting }: { hosting?: string }) {
+  if (hosting === 'local') return <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F0E6FA] text-[#5C2D91] border border-[#D4B8E8]">Local</span>;
+  return <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#E8F4FD] text-[#0078D4] border border-[#B3D7F2]">Cloud</span>;
+}
+
+function SessionsBadge({ sessions }: { sessions?: { total: number; highRisk: number } }) {
+  if (!sessions || sessions.total === 0) return <span className="text-[#616161] text-[13px]">No sessions</span>;
+  return (
+    <span className="text-[13px]">
+      <span className="text-[#242424] font-medium">{sessions.total} sessions</span>
+      {sessions.highRisk > 0 && <span className="text-[#C50F1F] ml-1">({sessions.highRisk} high-risk)</span>}
+    </span>
+  );
+}
+
+function AgentRow_({ row, navigate, tab, columns }: { row: AgentRow; navigate: (path: string) => void; tab: 'all' | 'cloud' | 'devices'; columns: { label: string; key: string }[] }) {
+  const handleClick = () => {
+    navigate(`/local-agents/agents/${row.agentId}`);
+  };
+
+  const renderCell = (key: string) => {
+    switch (key) {
+      case 'name': return <td key={key} className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type={row.type} initials={row.initials} icon={row.icon} /><span className="font-semibold text-[#242424]">{row.name}</span></div></td>;
+      case 'userName': return <td key={key} className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type="user" initials={row.initials} /><span className="font-semibold text-[#242424]">{row.userName || '\u2014'}</span></div></td>;
+      case 'device': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]">{row.device || '\u2014'}</td>;
+      case 'hosting': return <td key={key} className="px-6 py-2"><TypeBadge hosting={row.hosting} /></td>;
+      case 'status': return <td key={key} className="px-6 py-2 align-middle"><div className="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill={row.status === 'Active' ? '#107C10' : '#616161'}><circle cx="12" cy="12" r="10"/><path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg><span className="text-[#242424]">{row.status}</span></div></td>;
+      case 'sessions': return <td key={key} className="px-6 py-2"><SessionsBadge sessions={row.sessions} /></td>;
+      case 'platform': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]">{row.platform || '\u2014'}</td>;
+      case 'agentId': return <td key={key} className="px-6 py-2 text-[#616161] truncate max-w-[280px] font-normal text-[13px] tracking-tight" title={row.agentId}>{row.agentId}</td>;
+      case 'riskLevel': return <td key={key} className="px-6 py-2"><RiskLevel level={row.riskLevel} /></td>;
+      case 'riskType': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]">{row.riskType === 'No data available' ? <span className="text-[#616161]">{row.riskType}</span> : row.riskType}</td>;
+      case 'sensitiveActivityTrend': return <td key={key} className="px-6 py-2"><div className="mt-2">{row.sensitiveActivityTrend ? <Sparkline data={row.sensitiveActivityTrend} /> : <span className="text-[#616161] text-[13px]">No data available</span>}</div></td>;
+      case 'dataProtection': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]"><PoliciesCell row={row} /></td>;
+      default: return <td key={key} className="px-6 py-2">—</td>;
+    }
+  };
+
+  return (
+    <tr className="hover:bg-[#FAF9F8] transition-colors h-[64px] cursor-pointer" onClick={handleClick}>
+      {columns.map(col => renderCell(col.key))}
+    </tr>
+  )
+}
+
+export default function LocalAgentsAgents({ activeTab = 'all', groupBy = 'none' }: { activeTab?: 'all' | 'cloud' | 'devices'; groupBy?: 'none' | 'platform' | 'user' | 'device' }) {
   const navigate = useNavigate()
   const [sortConfig, setSortConfig] = React.useState<{ col: keyof AgentRow; dir: 'asc' | 'desc' } | null>({ col: 'riskLevel', dir: 'desc' });
+  const [filters, setFilters] = React.useState<{ riskLevel: string; status: string; platform: string; riskTypes: string; userName: string; device: string }>({ riskLevel: 'Any', status: 'Any', platform: 'Any', riskTypes: 'Any', userName: 'Any', device: 'Any' });
 
-  const filteredRows = React.useMemo(() => {
+  const tabFilteredRows = React.useMemo(() => {
     if (activeTab === 'cloud') return rows.filter(r => r.hosting === 'cloud');
     if (activeTab === 'devices') return rows.filter(r => r.hosting === 'local');
     return rows;
   }, [activeTab]);
+
+  // Compute unique values for filter dropdowns
+  const filterOptions = React.useMemo(() => ({
+    riskLevel: [...new Set(tabFilteredRows.map(r => r.riskLevel))].sort(),
+    status: [...new Set(tabFilteredRows.map(r => r.status))].sort(),
+    platform: [...new Set(tabFilteredRows.map(r => r.platform || 'Unknown'))].sort(),
+    riskTypes: [...new Set(tabFilteredRows.flatMap(r => r.riskType.split(', ')))].filter(t => t !== 'No data available').sort(),
+    userName: [...new Set(tabFilteredRows.map(r => r.userName).filter(Boolean))].sort() as string[],
+    device: [...new Set(tabFilteredRows.map(r => r.device).filter(Boolean))].sort() as string[],
+  }), [tabFilteredRows]);
+
+  const filteredRows = React.useMemo(() => {
+    return tabFilteredRows.filter(r => {
+      if (filters.riskLevel !== 'Any' && r.riskLevel !== filters.riskLevel) return false;
+      if (filters.status !== 'Any' && r.status !== filters.status) return false;
+      if (filters.platform !== 'Any' && (r.platform || 'Unknown') !== filters.platform) return false;
+      if (filters.riskTypes !== 'Any' && !r.riskType.includes(filters.riskTypes)) return false;
+      if (filters.userName !== 'Any' && r.userName !== filters.userName) return false;
+      if (filters.device !== 'Any' && r.device !== filters.device) return false;
+      return true;
+    });
+  }, [tabFilteredRows, filters]);
 
   const sortedRows = React.useMemo(() => {
     const data = [...filteredRows];
@@ -82,61 +233,128 @@ export default function LocalAgentsAgents({ activeTab = 'all' }: { activeTab?: '
     });
   }, [sortConfig, filteredRows]);
 
+  // Group by platform, user, or device
+  const groups = React.useMemo(() => {
+    if (groupBy === 'none') return null;
+    const map = new Map<string, AgentRow[]>();
+    sortedRows.forEach(r => {
+      let key: string;
+      if (groupBy === 'platform') key = r.platform || 'Unknown';
+      else if (groupBy === 'user') key = r.userName || r.name;
+      else key = r.device || '—';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    });
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [sortedRows, groupBy]);
+
   const handleSort = (col: keyof AgentRow) => {
     setSortConfig(c => c?.col === col ? { col, dir: c.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' });
   };
 
+  const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
+
+  const toggleGroup = (platform: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(platform)) next.delete(platform); else next.add(platform);
+      return next;
+    });
+  };
+
+  const activeFilterCount = Object.values(filters).filter(v => v !== 'Any').length;
+
+  const columns = activeTab === 'devices' ? localColumns : activeTab === 'cloud' ? cloudColumns : allColumns;
+
+  const renderHeader = () => (
+    <thead className="bg-white border-b border-gray-200 text-[#242424] font-normal text-sm">
+      <tr>
+        {columns.map(col => (
+          <th key={col.key} onClick={() => handleSort(col.key as keyof AgentRow)} className={`px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 bg-white group select-none ${(col as any).w || ''}`}>
+            <div className="flex items-center gap-1">
+              {col.label}
+              {(col as any).tooltip && (
+                <div className="ml-1 cursor-help text-[#616161]" title={(col as any).tooltip}>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" /><path d="M8 7.5v3.5M8 4.5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                </div>
+              )}
+              {sortConfig?.col === col.key && <span className="text-[12px] text-[#616161] font-light">{sortConfig.dir === 'asc' ? '↑' : '↓'}</span>}
+              <span className={`text-[10px] text-[#616161] ml-0.5 font-light ${sortConfig?.col === col.key ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>∨</span>
+            </div>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
+
   return (
     <div className="bg-white rounded-none border-t border-gray-200 mt-4 font-sans">
+      {/* Filters Bar */}
       <div className="flex items-center px-6 py-3 gap-2 border-b border-gray-100 text-[13px] bg-white flex-wrap">
         <span className="text-[#616161] mr-2">Filters:</span>
-        {[{ label: 'Risk level', val: 'Any' }, { label: 'Status', val: 'Any' }, { label: 'Risk types', val: 'Any' }, { label: 'Agent ID', val: 'Any' }].map(f => (
-          <div key={f.label} className="bg-[#F3F2F1] hover:bg-[#E1DFDD] px-3 py-1 rounded-full cursor-pointer flex items-center gap-1 text-[#242424]">{f.label}: <span className="font-semibold">{f.val}</span></div>
-        ))}
-        <button className="text-[#0078D4] flex items-center gap-1 ml-2 font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h18l-7 9v9l-4-4v-5L3 3z"/></svg>Add filter</button>
+        <FilterPill label="Risk level" value={filters.riskLevel} options={filterOptions.riskLevel} onChange={v => setFilters(f => ({ ...f, riskLevel: v }))} />
+        <FilterPill label="Status" value={filters.status} options={filterOptions.status} onChange={v => setFilters(f => ({ ...f, status: v }))} />
+        <FilterPill label="Platform" value={filters.platform} options={filterOptions.platform} onChange={v => setFilters(f => ({ ...f, platform: v }))} />
+        <FilterPill label="Risk types" value={filters.riskTypes} options={filterOptions.riskTypes} onChange={v => setFilters(f => ({ ...f, riskTypes: v }))} />
+        {filterOptions.userName.length > 0 && activeTab !== 'all' && (
+          <FilterPill label="Used by" value={filters.userName} options={filterOptions.userName} onChange={v => setFilters(f => ({ ...f, userName: v }))} />
+        )}
+        {filterOptions.device.length > 0 && activeTab !== 'all' && (
+          <FilterPill label="Device" value={filters.device} options={filterOptions.device} onChange={v => setFilters(f => ({ ...f, device: v }))} />
+        )}
+        {activeFilterCount > 0 && (
+          <button onClick={() => setFilters({ riskLevel: 'Any', status: 'Any', platform: 'Any', riskTypes: 'Any', userName: 'Any', device: 'Any' })} className="text-[#C50F1F] flex items-center gap-1 ml-2 font-medium text-[13px]">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            Clear all ({activeFilterCount})
+          </button>
+        )}
       </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-[14px] text-[#242424] min-w-[1200px]">
-          <thead className="bg-white border-b border-gray-200 text-[#242424] font-normal text-sm">
-            <tr>
-              {[
-                { label: 'Name', key: 'name' as keyof AgentRow },
-                { label: 'Status', key: 'status' as keyof AgentRow, w: 'min-w-[120px]' },
-                { label: 'Agent ID', key: 'agentId' as keyof AgentRow },
-                { label: 'Risk level', key: 'riskLevel' as keyof AgentRow, w: 'min-w-[140px]' },
-                { label: 'Risk types', key: 'riskType' as keyof AgentRow },
-                { label: 'Sensitive activity trend', key: 'sensitiveActivityTrend' as keyof AgentRow },
-                { label: 'Data protection', key: 'dataProtection' as keyof AgentRow },
-                { label: 'Data compliance', key: 'dataCompliance' as keyof AgentRow },
-                { label: 'Authentication', key: 'authentication' as keyof AgentRow },
-              ].map(col => (
-                <th key={col.key} onClick={() => handleSort(col.key)} className={`px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 bg-white group select-none ${col.w || ''}`}>
-                  <div className="flex items-center gap-1">
-                    {col.label}
-                    {sortConfig?.col === col.key && <span className="text-[12px] text-[#616161] font-light">{sortConfig.dir === 'asc' ? '↑' : '↓'}</span>}
-                    <span className={`text-[10px] text-[#616161] ml-0.5 font-light ${sortConfig?.col === col.key ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>∨</span>
+        {groups ? (
+          // Grouped view
+          <div>
+            {groups.map(([platform, agentRows]) => {
+              const isCollapsed = collapsedGroups.has(platform);
+              return (
+                <div key={platform}>
+                  <div
+                    onClick={() => toggleGroup(platform)}
+                    className="px-6 py-3 bg-[#FAFAFA] border-b border-gray-200 flex items-center gap-2 cursor-pointer hover:bg-[#F0F0F0] select-none"
+                  >
+                    <svg
+                      width="12" height="12" viewBox="0 0 12 12" fill="none"
+                      className={`transition-transform duration-150 ${isCollapsed ? '' : 'rotate-90'}`}
+                    >
+                      <path d="M4 2l4 4-4 4" stroke="#616161" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#616161" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 3v10M2 7h12"/></svg>
+                    <span className="text-[14px] font-semibold text-[#242424]">{platform}</span>
+                    <span className="text-[13px] text-[#616161]">({agentRows.length})</span>
                   </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {sortedRows.map((row, i) => (
-              <tr key={i} className="hover:bg-[#FAF9F8] transition-colors h-[64px] cursor-pointer" onClick={() => navigate(`/local-agents/agents/${row.agentId}`)}>
-                <td className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type={row.type} initials={row.initials} icon={row.icon} /><span className="font-semibold text-[#242424]">{row.name}</span></div></td>
-                <td className="px-6 py-2 align-middle"><div className="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="#107C10"><circle cx="12" cy="12" r="10"/><path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg><span className="text-[#242424]">{row.status}</span></div></td>
-                <td className="px-6 py-2 text-[#616161] truncate max-w-[280px] font-normal text-[13px] tracking-tight" title={row.agentId}>{row.agentId}</td>
-                <td className="px-6 py-2"><RiskLevel level={row.riskLevel} /></td>
-                <td className="px-6 py-2 text-[#242424] text-[13px]">{row.riskType === 'No data available' ? <span className="text-[#616161]">{row.riskType}</span> : row.riskType}</td>
-                <td className="px-6 py-2"><div className="mt-2">{row.sensitiveActivityTrend ? <Sparkline data={row.sensitiveActivityTrend} /> : <span className="text-[#616161] text-[13px]">No data available</span>}</div></td>
-                <td className="px-6 py-2 text-[#242424] text-[13px]">{row.dataProtection}</td>
-                <td className="px-6 py-2 text-[#242424] text-[13px]">{row.dataCompliance}</td>
-                <td className="px-6 py-2 text-[#242424] text-[13px]">{row.authentication}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {!isCollapsed && (
+                    <table className="w-full text-left text-[14px] text-[#242424] min-w-[1200px]">
+                      {renderHeader()}
+                      <tbody className="divide-y divide-gray-100">
+                        {agentRows.map((row, i) => <AgentRow_ key={i} row={row} navigate={navigate} tab={activeTab} columns={columns} />)}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          // Flat view
+          <table className="w-full text-left text-[14px] text-[#242424] min-w-[1200px]">
+            {renderHeader()}
+            <tbody className="divide-y divide-gray-100">
+              {sortedRows.map((row, i) => <AgentRow_ key={i} row={row} navigate={navigate} tab={activeTab} columns={columns} />)}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )
-}
+}
