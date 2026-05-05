@@ -873,7 +873,7 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                   </div>
 
                   {/* Right: Counts grid */}
-                  <div className="flex-1 grid grid-cols-3 gap-8">
+                  <div className="flex-1 grid grid-cols-2 gap-8">
                       {/* Interactions */}
                       <div>
                           <div className="flex items-baseline gap-1">
@@ -911,7 +911,8 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                           <div className="text-xs text-[#616161] mt-1">Oversharing</div>
                       </div>
                       )}
-                      {/* Risk types */}
+                      {/* Risk types - cloud only (local shows them in Top risks below) */}
+                      {!isLocal && (
                       <div>
                           <div className="flex items-baseline gap-1">
                               <span className="text-xl font-bold text-[#242424]">2</span>
@@ -922,6 +923,7 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                           </div>
                           <div className="text-xs text-[#616161] mt-1">Exfiltration</div>
                       </div>
+                      )}
                   </div>
               </div>
 
