@@ -853,34 +853,36 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
            {/* Risk Level Card */}
           <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 mb-6">
               <div className="text-[#616161] text-xs font-semibold mb-2">Risk level</div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-3">
                   <span className="text-[#C50F1F] font-bold text-lg">High risk</span>
               </div>
-              <div className="flex gap-1 mb-4">
+
+              {/* Interaction + Session summary (primary metrics) */}
+              <div className="mb-1">
+                  <div className="text-[#242424]">
+                      <span className="text-xl font-bold text-[#C50F1F]">8</span>
+                      <span className="text-[13px] text-[#242424] ml-1">high-risk interactions</span>
+                      <span className="text-[13px] text-[#616161]"> (42 total)</span>
+                  </div>
+              </div>
+              {isLocal && agent.sessions && agent.sessions.total > 0 && (
+                  <div className="text-[12px] text-[#616161] mt-0.5 mb-3">
+                      Across {agent.sessions.highRisk} high-risk session{agent.sessions.highRisk !== 1 ? 's' : ''} ({agent.sessions.total} total)
+                  </div>
+              )}
+              {!(isLocal && agent.sessions && agent.sessions.total > 0) && <div className="mb-3"></div>}
+
+              {/* Risk meter (supporting visual) */}
+              <div className="flex gap-1 mb-6">
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-[#C50F1F]"></div>
                   <div className="w-4 h-4 bg-gray-200"></div>
               </div>
 
-              {/* Interaction + Session summary */}
-              <div className="mb-6 space-y-1">
-                  <div className="text-[13px] text-[#242424]">
-                      <span className="font-semibold text-[#C50F1F]">8 high-risk interactions</span>
-                      <span className="text-[#616161]"> (42 total)</span>
-                  </div>
-                  {isLocal && agent.sessions && agent.sessions.total > 0 && (
-                      <div className="text-[12px] text-[#616161]">
-                          Across <span className="font-medium text-[#616161]">{agent.sessions.highRisk} high-risk session{agent.sessions.highRisk !== 1 ? 's' : ''}</span> ({agent.sessions.total} total)
-                          <span className="mx-2">·</span>
-                          <a href="#" className="text-[#0078D4] hover:underline">View in Insider Risk Management →</a>
-                      </div>
-                  )}
-              </div>
-
-              {/* Risk breakdown */}
-              <div className="text-[11px] text-[#616161] uppercase tracking-wide font-semibold mb-3">Risk breakdown</div>
-              <div className="grid grid-cols-3 gap-8 mb-4">
+              {/* Top risks */}
+              <div className="text-[12px] text-[#616161] font-semibold mb-3">Top risks:</div>
+              <div className="grid grid-cols-3 gap-6 mb-4">
                  {['Oversharing', 'Exfiltration', 'Unethical'].map((type, i) => (
                      <div key={type}>
                           <div className="flex items-baseline gap-1">
@@ -894,6 +896,13 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                      </div>
                  ))}
               </div>
+
+              {/* IRM link (caption style) */}
+              {isLocal && (
+                <div className="mt-1">
+                  <a href="#" className="text-[#0078D4] text-[11px] hover:underline">View session details in Insider Risk Management →</a>
+                </div>
+              )}
           </div>
 
           {/* Trend Chart */}
