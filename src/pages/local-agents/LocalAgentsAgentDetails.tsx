@@ -853,54 +853,96 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
            {/* Risk Level Card */}
           <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 mb-6">
               <div className="text-[#616161] text-xs font-semibold mb-2">Risk level</div>
-              <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[#C50F1F] font-bold text-lg">High risk</span>
-              </div>
-
-              {/* Interaction + Session summary (primary metrics) */}
-              <div className="mb-1">
-                  <div className="text-[#242424]">
-                      <span className="text-xl font-bold text-[#C50F1F]">8</span>
-                      <span className="text-[13px] text-[#242424] ml-1">high-risk interactions</span>
-                      <span className="text-[13px] text-[#616161]"> (42 total)</span>
+              <div className="flex items-start gap-12">
+                  {/* Left: Risk level + meter */}
+                  <div className="shrink-0">
+                      <div className="flex items-center gap-2 mb-2">
+                          <span className="text-[#C50F1F] font-bold text-lg">High risk</span>
+                      </div>
+                      <div className="flex gap-1 mb-3">
+                          <div className="w-4 h-4 bg-[#C50F1F]"></div>
+                          <div className="w-4 h-4 bg-[#C50F1F]"></div>
+                          <div className="w-4 h-4 bg-[#C50F1F]"></div>
+                          <div className="w-4 h-4 bg-gray-200"></div>
+                      </div>
+                      {isLocal && (
+                        <div className="mt-2">
+                          <a href="#" className="text-[#0078D4] text-[11px] hover:underline">View in Insider Risk Management →</a>
+                        </div>
+                      )}
                   </div>
-              </div>
-              {isLocal && agent.sessions && agent.sessions.total > 0 && (
-                  <div className="text-[12px] text-[#616161] mt-0.5 mb-3">
-                      Across {agent.sessions.highRisk} high-risk session{agent.sessions.highRisk !== 1 ? 's' : ''} ({agent.sessions.total} total)
-                  </div>
-              )}
-              {!(isLocal && agent.sessions && agent.sessions.total > 0) && <div className="mb-3"></div>}
 
-              {/* Risk meter (supporting visual) */}
-              <div className="flex gap-1 mb-6">
-                  <div className="w-4 h-4 bg-[#C50F1F]"></div>
-                  <div className="w-4 h-4 bg-[#C50F1F]"></div>
-                  <div className="w-4 h-4 bg-[#C50F1F]"></div>
-                  <div className="w-4 h-4 bg-gray-200"></div>
-              </div>
-
-              {/* Top risks */}
-              <div className="text-[12px] text-[#616161] font-semibold mb-3">Top risks:</div>
-              <div className="grid grid-cols-3 gap-6 mb-4">
-                 {['Oversharing', 'Exfiltration', 'Unethical'].map((type, i) => (
-                     <div key={type}>
+                  {/* Right: Counts grid */}
+                  <div className="flex-1 grid grid-cols-3 gap-8">
+                      {/* Interactions */}
+                      <div>
                           <div className="flex items-baseline gap-1">
-                              <span className="text-xl font-bold text-[#242424]">{i === 0 ? '4' : '2'}</span>
+                              <span className="text-xl font-bold text-[#242424]">8</span>
                               <span className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] px-1 rounded flex items-center">
                                   <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
-                                  {i === 0 ? '16%' : '2%'} in the past 30 days
+                                  24% in the past 30 days
                               </span>
                           </div>
-                          <div className="text-xs text-[#616161] mt-1">{type}</div>
-                     </div>
-                 ))}
+                          <div className="text-xs text-[#616161] mt-1">High-risk interactions</div>
+                          <div className="text-[10px] text-[#616161] mt-0.5">42 total</div>
+                      </div>
+                      {/* Sessions (local only) or Oversharing (cloud) */}
+                      {isLocal && agent.sessions ? (
+                      <div>
+                          <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-bold text-[#242424]">{agent.sessions.highRisk}</span>
+                              <span className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] px-1 rounded flex items-center">
+                                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                                  {agent.sessions.highRisk > 2 ? '12%' : '4%'} in the past 30 days
+                              </span>
+                          </div>
+                          <div className="text-xs text-[#616161] mt-1">High-risk sessions</div>
+                          <div className="text-[10px] text-[#616161] mt-0.5">{agent.sessions.total} total</div>
+                      </div>
+                      ) : (
+                      <div>
+                          <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-bold text-[#242424]">4</span>
+                              <span className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] px-1 rounded flex items-center">
+                                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                                  16% in the past 30 days
+                              </span>
+                          </div>
+                          <div className="text-xs text-[#616161] mt-1">Oversharing</div>
+                      </div>
+                      )}
+                      {/* Risk types */}
+                      <div>
+                          <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-bold text-[#242424]">2</span>
+                              <span className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] px-1 rounded flex items-center">
+                                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                                  2% in the past 30 days
+                              </span>
+                          </div>
+                          <div className="text-xs text-[#616161] mt-1">Exfiltration</div>
+                      </div>
+                  </div>
               </div>
 
-              {/* IRM link (caption style) */}
+              {/* Top risks row (local agents - show risk types below) */}
               {isLocal && (
-                <div className="mt-1">
-                  <a href="#" className="text-[#0078D4] text-[11px] hover:underline">View session details in Insider Risk Management →</a>
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <div className="text-[12px] text-[#616161] font-semibold mb-3">Top risks:</div>
+                  <div className="grid grid-cols-3 gap-6">
+                     {['Oversharing', 'Exfiltration', 'Unethical'].map((type, i) => (
+                         <div key={type}>
+                              <div className="flex items-baseline gap-1">
+                                  <span className="text-xl font-bold text-[#242424]">{i === 0 ? '4' : '2'}</span>
+                                  <span className="text-[10px] text-[#C50F1F] bg-[#FDE7E9] px-1 rounded flex items-center">
+                                      <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3.5 5.5M6 3L8.5 5.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+                                      {i === 0 ? '16%' : '2%'} in the past 30 days
+                                  </span>
+                              </div>
+                              <div className="text-xs text-[#616161] mt-1">{type}</div>
+                         </div>
+                     ))}
+                  </div>
                 </div>
               )}
           </div>
