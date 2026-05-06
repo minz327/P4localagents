@@ -82,13 +82,6 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
             {data.totalApps} {agentLabel}
           </div>
-          {isLocal && data.localDimensions ? (
-            <div>
-              <div className="text-[14px] text-[#616161]">
-                {data.localDimensions.uniqueAgents} agents &middot; {data.localDimensions.uniqueUsers} users &middot; {data.localDimensions.uniqueDevices} devices
-              </div>
-            </div>
-          ) : (
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[80px] 2xl:gap-[120px]">
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Active <InfoIcon /></div>
@@ -107,7 +100,6 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
               </div>
             </div>
           </div>
-          )}
         </Card>
 
         <Card>
