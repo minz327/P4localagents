@@ -133,16 +133,15 @@ const cloudColumns = [
 ]
 
 const localColumns = [
-  { label: 'Name', key: 'name' },
-  { label: 'Platform', key: 'platform' },
+  { label: 'Name', key: 'platform' },
+  { label: 'Used by', key: 'userName' },
+  { label: 'Device', key: 'device' },
   { label: 'Status', key: 'status' },
   { label: 'Agent ID', key: 'agentId' },
   { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
   { label: 'Risk types', key: 'riskType' },
   { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
   { label: 'Policies', key: 'dataProtection' },
-  { label: 'Used by', key: 'userName' },
-  { label: 'Device', key: 'device' },
 ]
 
 function PoliciesCell({ row }: { row: AgentRow }) {

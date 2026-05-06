@@ -106,7 +106,12 @@ export default function LocalAgentsOverview() {
     const exfiltration = filteredRows.filter(r => r.riskType.includes('Exfiltration')).length;
     const unethical = filteredRows.filter(r => r.riskType.includes('Unethical')).length;
     const tabLabel = activeTab === 'cloud' ? 'cloud agents' : activeTab === 'devices' ? 'local agents' : 'AI apps';
-    return { totalApps: total, active, inactive, highRisk, mediumRisk, lowRisk, sensitive: { oversharing, exfiltration, unethical }, tabLabel };
+    const localDimensions = activeTab === 'devices' ? {
+      uniqueAgents: new Set(filteredRows.map(r => r.platform)).size,
+      uniqueUsers: new Set(filteredRows.map(r => r.userName).filter(Boolean)).size,
+      uniqueDevices: new Set(filteredRows.map(r => r.device).filter(Boolean)).size,
+    } : undefined;
+    return { totalApps: total, active, inactive, highRisk, mediumRisk, lowRisk, sensitive: { oversharing, exfiltration, unethical }, tabLabel, localDimensions };
   }, [filteredRows, activeTab]);
 
   const tabCounts = React.useMemo(() => ({
