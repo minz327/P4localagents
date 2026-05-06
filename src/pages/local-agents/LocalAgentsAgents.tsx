@@ -2,7 +2,35 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { rows, AgentRow } from '../../lib/agentsData'
 
-function AppIcon({ type, initials, icon }: { type: 'app' | 'user'; initials?: string; icon?: string }) {
+const NemoClawIcon = ({ size = 32 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <rect width="24" height="24" rx="4" fill="#76B900"/>
+    <path d="M12.2 8.4v-.7c-.1 0-.2 0-.3 0-2.1 0-3.7 1.8-3.7 4 0 2.2 1.6 4 3.7 4 .1 0 .2 0 .3 0v-.7c-1.7-.1-3-1.5-3-3.3s1.3-3.2 3-3.3zm0-1.4v-1c-3 .1-5.4 2.5-5.4 5.5 0 3 2.4 5.4 5.4 5.5v-1c-2.5-.1-4.4-2.1-4.4-4.5s1.9-4.4 4.4-4.5zm0 2.8v-.7c-1.2.1-2.1 1.1-2.1 2.4 0 1.3.9 2.3 2.1 2.4v-.7c-.8-.1-1.4-.8-1.4-1.7s.6-1.6 1.4-1.7zm.7-2.8v1c2.3.2 4.1 2.1 4.1 4.5s-1.8 4.3-4.1 4.5v1c2.8-.2 5.1-2.5 5.1-5.5s-2.3-5.3-5.1-5.5zm0 1.4v.7c1.6.2 2.7 1.5 2.7 3.3 0 1.8-1.1 3.1-2.7 3.3v.7c2-.2 3.4-1.7 3.4-4s-1.4-3.8-3.4-4zm0 2.1v3.4c-.8-.1-1.3-.8-1.3-1.7 0-.8.4-1.5 1.3-1.7z" fill="white"/>
+  </svg>
+);
+
+const OpenClawIcon = ({ size = 32 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <rect x="2" y="3" width="20" height="18" rx="3" fill="#1a1a2e"/>
+    <path d="M7 8l3 3-3 3" stroke="#e94560" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M13 16h4" stroke="#e94560" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const CopilotIcon = ({ size = 32 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="#242424"><path d="M23.922 16.992c-.861 1.495-5.859 5.023-11.922 5.023-6.063 0-11.061-3.528-11.922-5.023A.641.641 0 0 1 0 16.736v-2.869a.841.841 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.195 10.195 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952 1.399-1.136 3.392-2.093 6.122-2.093 2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.832.832 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256ZM12.172 11h-.344a4.323 4.323 0 0 1-.355.508C10.703 12.455 9.555 13 7.965 13c-1.725 0-2.989-.359-3.782-1.259a2.005 2.005 0 0 1-.085-.104L4 11.741v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.323 4.323 0 0 1-.355-.508h-.016.016Zm.641-2.935c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"/><path d="M14.5 14.25a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Zm-5 0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Z"/></svg>
+);
+
+function AppIcon({ type, initials, icon, platform }: { type: 'app' | 'user'; initials?: string; icon?: string; platform?: string }) {
+  if (platform === 'GitHub Copilot CLI') {
+    return <div className="w-[32px] h-[32px] shrink-0 flex items-center justify-center"><CopilotIcon size={28} /></div>;
+  }
+  if (platform === 'OpenClaw') {
+    return <div className="w-[32px] h-[32px] shrink-0 flex items-center justify-center"><OpenClawIcon size={28} /></div>;
+  }
+  if (platform === 'NemoClaw') {
+    return <div className="w-[32px] h-[32px] shrink-0 flex items-center justify-center"><NemoClawIcon size={28} /></div>;
+  }
   if (type === 'app') {
     const appIcon = icon || 'copilot';
     return (
@@ -95,8 +123,8 @@ function FilterPill({ label, value, options, onChange }: { label: string; value:
 // Logical column order per tab — designed for scan path
 const cloudColumns = [
   { label: 'Name', key: 'name' },
-  { label: 'Status', key: 'status' },
   { label: 'Platform', key: 'platform' },
+  { label: 'Status', key: 'status' },
   { label: 'Agent ID', key: 'agentId' },
   { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
   { label: 'Risk types', key: 'riskType' },
@@ -105,27 +133,16 @@ const cloudColumns = [
 ]
 
 const localColumns = [
+  { label: 'Name', key: 'name' },
+  { label: 'Platform', key: 'platform' },
+  { label: 'Status', key: 'status' },
+  { label: 'Agent ID', key: 'agentId' },
+  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
+  { label: 'Risk types', key: 'riskType' },
+  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
+  { label: 'Policies', key: 'dataProtection' },
   { label: 'Used by', key: 'userName' },
   { label: 'Device', key: 'device' },
-  { label: 'Platform', key: 'platform' },
-  { label: 'Status', key: 'status' },
-  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
-  { label: 'Risk types', key: 'riskType' },
-  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
-  { label: 'Policies', key: 'dataProtection' },
-  { label: 'Agent ID', key: 'agentId' },
-]
-
-const allColumns = [
-  { label: 'Name', key: 'name' },
-  { label: 'Type', key: 'hosting', w: 'min-w-[100px]' },
-  { label: 'Status', key: 'status' },
-  { label: 'Platform', key: 'platform' },
-  { label: 'Agent ID', key: 'agentId' },
-  { label: 'Risk level', key: 'riskLevel', w: 'min-w-[140px]' },
-  { label: 'Risk types', key: 'riskType' },
-  { label: 'Risk activity trend', key: 'sensitiveActivityTrend', tooltip: 'This shows how risk signals (e.g., DLP blocks, risky interactions) evolved over time across sessions.' },
-  { label: 'Policies', key: 'dataProtection' },
 ]
 
 function PoliciesCell({ row }: { row: AgentRow }) {
@@ -140,6 +157,27 @@ function TypeBadge({ hosting }: { hosting?: string }) {
   return <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#E8F4FD] text-[#0078D4] border border-[#B3D7F2]">Cloud</span>;
 }
 
+const cloudUserPools: { initials: string; bg: string; text: string }[][] = [
+  [{ initials: 'JB', bg: '#E8DAEF', text: '#5B2C6F' }, { initials: 'EW', bg: '#D5F5E3', text: '#1E8449' }, { initials: 'MB', bg: '#D6DBDF', text: '#2C3E50' }],
+  [{ initials: 'KR', bg: '#FADBD8', text: '#922B21' }, { initials: 'TL', bg: '#D4E6F1', text: '#1A5276' }, { initials: 'AS', bg: '#FCF3CF', text: '#7D6608' }, { initials: 'NP', bg: '#D5F5E3', text: '#1E8449' }],
+  [{ initials: 'RC', bg: '#E8DAEF', text: '#5B2C6F' }, { initials: 'DM', bg: '#FADBD8', text: '#922B21' }],
+  [{ initials: 'LH', bg: '#D4E6F1', text: '#1A5276' }, { initials: 'SG', bg: '#FCF3CF', text: '#7D6608' }, { initials: 'VP', bg: '#D5F5E3', text: '#1E8449' }, { initials: 'AK', bg: '#E8DAEF', text: '#5B2C6F' }, { initials: 'JT', bg: '#FADBD8', text: '#922B21' }],
+];
+
+function CloudFacepile({ seed }: { seed: number }) {
+  const pool = cloudUserPools[seed % cloudUserPools.length];
+  const shown = pool.slice(0, 3);
+  const extra = pool.length - 3;
+  return (
+    <div className="flex items-center">
+      {shown.map((u, i) => (
+        <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold border-2 border-white shrink-0" style={{ backgroundColor: u.bg, color: u.text, marginLeft: i > 0 ? '-6px' : 0, zIndex: shown.length - i }}>{u.initials}</div>
+      ))}
+      {extra > 0 && <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-medium border-2 border-white shrink-0 bg-[#F0F0F0] text-[#616161]" style={{ marginLeft: '-6px', zIndex: 0 }}>+{extra}</div>}
+    </div>
+  );
+}
+
 function SessionsBadge({ sessions }: { sessions?: { total: number; highRisk: number } }) {
   if (!sessions || sessions.total === 0) return <span className="text-[#616161] text-[13px]">No sessions</span>;
   return (
@@ -150,16 +188,16 @@ function SessionsBadge({ sessions }: { sessions?: { total: number; highRisk: num
   );
 }
 
-function AgentRow_({ row, navigate, tab, columns }: { row: AgentRow; navigate: (path: string) => void; tab: 'all' | 'cloud' | 'devices'; columns: { label: string; key: string }[] }) {
+function AgentRow_({ row, navigate, tab, columns }: { row: AgentRow; navigate: (path: string) => void; tab: 'cloud' | 'devices' | 'aiapps'; columns: { label: string; key: string }[] }) {
   const handleClick = () => {
     navigate(`/local-agents/agents/${row.agentId}`);
   };
 
   const renderCell = (key: string) => {
     switch (key) {
-      case 'name': return <td key={key} className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type={row.type} initials={row.initials} icon={row.icon} /><span className="font-semibold text-[#242424]">{row.name}</span></div></td>;
-      case 'userName': return <td key={key} className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type="user" initials={row.initials} /><span className="font-semibold text-[#242424]">{row.userName || '\u2014'}</span></div></td>;
-      case 'device': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]">{row.device || '\u2014'}</td>;
+      case 'name': return <td key={key} className="px-6 py-2"><div className="flex items-center gap-3"><AppIcon type={row.type} initials={row.initials} icon={row.icon} platform={row.platform} /><span className="font-semibold text-[#242424]">{row.name}</span></div></td>;
+      case 'userName': return <td key={key} className="px-6 py-2">{row.userName ? <div className="flex items-center"><div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 border-2 border-white" style={{ backgroundColor: '#FFF4CE', color: '#785C34' }}>{row.initials || 'U'}</div><span className="text-[#242424] text-[13px] ml-2">{row.userName}</span></div> : row.hosting === 'cloud' ? <CloudFacepile seed={row.agentId.charCodeAt(0) + row.agentId.charCodeAt(row.agentId.length - 1)} /> : null}</td>;
+      case 'device': return <td key={key} className="px-6 py-2 text-[#242424] text-[13px]">{row.device || ''}</td>;
       case 'hosting': return <td key={key} className="px-6 py-2"><TypeBadge hosting={row.hosting} /></td>;
       case 'status': return <td key={key} className="px-6 py-2 align-middle"><div className="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill={row.status === 'Active' ? '#107C10' : '#616161'}><circle cx="12" cy="12" r="10"/><path d="M7 12l3 3 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg><span className="text-[#242424]">{row.status}</span></div></td>;
       case 'sessions': return <td key={key} className="px-6 py-2"><SessionsBadge sessions={row.sessions} /></td>;
@@ -180,7 +218,7 @@ function AgentRow_({ row, navigate, tab, columns }: { row: AgentRow; navigate: (
   )
 }
 
-export default function LocalAgentsAgents({ activeTab = 'all', groupBy = 'none' }: { activeTab?: 'all' | 'cloud' | 'devices'; groupBy?: 'none' | 'platform' | 'user' | 'device' }) {
+export default function LocalAgentsAgents({ activeTab = 'cloud', groupBy = 'none' }: { activeTab?: 'cloud' | 'devices' | 'aiapps'; groupBy?: 'none' | 'platform' | 'user' | 'device' }) {
   const navigate = useNavigate()
   const [sortConfig, setSortConfig] = React.useState<{ col: keyof AgentRow; dir: 'asc' | 'desc' } | null>({ col: 'riskLevel', dir: 'desc' });
   const [filters, setFilters] = React.useState<{ riskLevel: string; status: string; platform: string; riskTypes: string; userName: string; device: string }>({ riskLevel: 'Any', status: 'Any', platform: 'Any', riskTypes: 'Any', userName: 'Any', device: 'Any' });
@@ -264,7 +302,7 @@ export default function LocalAgentsAgents({ activeTab = 'all', groupBy = 'none' 
 
   const activeFilterCount = Object.values(filters).filter(v => v !== 'Any').length;
 
-  const columns = activeTab === 'devices' ? localColumns : activeTab === 'cloud' ? cloudColumns : allColumns;
+  const columns = activeTab === 'devices' ? localColumns : cloudColumns;
 
   const renderHeader = () => (
     <thead className="bg-white border-b border-gray-200 text-[#242424] font-normal text-sm">
@@ -296,10 +334,10 @@ export default function LocalAgentsAgents({ activeTab = 'all', groupBy = 'none' 
         <FilterPill label="Status" value={filters.status} options={filterOptions.status} onChange={v => setFilters(f => ({ ...f, status: v }))} />
         <FilterPill label="Platform" value={filters.platform} options={filterOptions.platform} onChange={v => setFilters(f => ({ ...f, platform: v }))} />
         <FilterPill label="Risk types" value={filters.riskTypes} options={filterOptions.riskTypes} onChange={v => setFilters(f => ({ ...f, riskTypes: v }))} />
-        {filterOptions.userName.length > 0 && activeTab !== 'all' && (
+        {filterOptions.userName.length > 0 && activeTab === 'devices' && (
           <FilterPill label="Used by" value={filters.userName} options={filterOptions.userName} onChange={v => setFilters(f => ({ ...f, userName: v }))} />
         )}
-        {filterOptions.device.length > 0 && activeTab !== 'all' && (
+        {filterOptions.device.length > 0 && activeTab === 'devices' && (
           <FilterPill label="Device" value={filters.device} options={filterOptions.device} onChange={v => setFilters(f => ({ ...f, device: v }))} />
         )}
         {activeFilterCount > 0 && (

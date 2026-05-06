@@ -66,7 +66,7 @@ function Toolbar({ groupBy, setGroupBy, activeTab }: { groupBy: 'none' | 'platfo
                      {[
                        { key: 'none' as const, label: 'None' },
                        { key: 'platform' as const, label: 'Platform' },
-                       ...(activeTab !== 'all' ? [
+                       ...(activeTab === 'devices' ? [
                          { key: 'user' as const, label: 'Used by' },
                          { key: 'device' as const, label: 'Device' },
                        ] : []),
@@ -85,13 +85,13 @@ function Toolbar({ groupBy, setGroupBy, activeTab }: { groupBy: 'none' | 'platfo
 }
 
 export default function LocalAgentsOverview() {
-  const [activeTab, setActiveTab] = useState<'all' | 'cloud' | 'devices'>('all');
+  const [activeTab, setActiveTab] = useState<'cloud' | 'devices' | 'aiapps'>('cloud');
   const [groupBy, setGroupBy] = useState<'none' | 'platform' | 'user' | 'device'>('none');
 
   const filteredRows = React.useMemo(() => {
-    if (activeTab === 'all') return rows;
     if (activeTab === 'cloud') return rows.filter(r => r.hosting === 'cloud');
     if (activeTab === 'devices') return rows.filter(r => r.hosting === 'local');
+    if (activeTab === 'aiapps') return rows.filter(r => r.hosting === 'aiapp');
     return rows;
   }, [activeTab]);
 
@@ -105,14 +105,14 @@ export default function LocalAgentsOverview() {
     const oversharing = filteredRows.filter(r => r.riskType.includes('Oversharing')).length;
     const exfiltration = filteredRows.filter(r => r.riskType.includes('Exfiltration')).length;
     const unethical = filteredRows.filter(r => r.riskType.includes('Unethical')).length;
-    const tabLabel = activeTab === 'cloud' ? 'cloud agents' : activeTab === 'devices' ? 'local agents' : undefined;
+    const tabLabel = activeTab === 'cloud' ? 'cloud agents' : activeTab === 'devices' ? 'local agents' : 'AI apps';
     return { totalApps: total, active, inactive, highRisk, mediumRisk, lowRisk, sensitive: { oversharing, exfiltration, unethical }, tabLabel };
   }, [filteredRows, activeTab]);
 
   const tabCounts = React.useMemo(() => ({
-    all: rows.length,
     cloud: rows.filter(r => r.hosting === 'cloud').length,
     devices: rows.filter(r => r.hosting === 'local').length,
+    aiapps: rows.filter(r => r.hosting === 'aiapp').length,
   }), []);
 
   return (
@@ -128,14 +128,14 @@ export default function LocalAgentsOverview() {
           {/* Pill Tabs */}
           <div className="flex items-center gap-2 mb-6">
             {([
-              { key: 'all' as const, label: `All (${tabCounts.all})`, icon: (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-              )},
               { key: 'cloud' as const, label: `Cloud Agents (${tabCounts.cloud})`, icon: (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M13.5 10.5a2.5 2.5 0 0 0-1.07-2.05A3.5 3.5 0 0 0 6 7a3 3 0 0 0-2.83 2.02A2.5 2.5 0 0 0 3.5 14h10a2.5 2.5 0 0 0 0-5v1.5z"/></svg>
               )},
               { key: 'devices' as const, label: `Local Agents (${tabCounts.devices})`, icon: (
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="2" width="10" height="9" rx="1.5"/><path d="M6 14h4"/><path d="M8 11v3"/><circle cx="8" cy="6" r="1.5" fill="currentColor" stroke="none"/><path d="M5.5 8.5a3.5 3.5 0 0 1 5 0" strokeWidth="1.2"/></svg>
+              )},
+              { key: 'aiapps' as const, label: `AI Apps (${tabCounts.aiapps})`, icon: (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
               )},
             ]).map(tab => (
               <button
@@ -156,9 +156,7 @@ export default function LocalAgentsOverview() {
           <div className="mb-4">
             <div className="text-[18px] font-semibold text-[#242424]">Key metrics</div>
             <div className="text-[14px] text-[#242424] mt-1">
-              {activeTab === 'all' 
-                ? 'Metrics for your organization and trends in the last 30 days.'
-                : `Showing metrics for ${activeTab === 'cloud' ? 'Cloud Agents' : 'Local Agents'}.`}
+              {`Showing metrics for ${activeTab === 'cloud' ? 'Cloud Agents' : activeTab === 'devices' ? 'Local Agents' : 'AI Apps'}.`}
             </div>
           </div>
 
