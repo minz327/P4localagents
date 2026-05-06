@@ -226,6 +226,7 @@ export default function LocalAgentsAgents({ activeTab = 'cloud', groupBy = 'none
   const tabFilteredRows = React.useMemo(() => {
     if (activeTab === 'cloud') return rows.filter(r => r.hosting === 'cloud');
     if (activeTab === 'devices') return rows.filter(r => r.hosting === 'local');
+    if (activeTab === 'aiapps') return rows.filter(r => r.hosting === 'aiapp');
     return rows;
   }, [activeTab]);
 
