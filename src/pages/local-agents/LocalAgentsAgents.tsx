@@ -133,7 +133,7 @@ const cloudColumns = [
 ]
 
 const localColumns = [
-  { label: 'Name', key: 'platform' },
+  { label: 'Agent type', key: 'platform' },
   { label: 'Used by', key: 'userName' },
   { label: 'Device', key: 'device' },
   { label: 'Status', key: 'status' },

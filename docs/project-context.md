@@ -1,6 +1,6 @@
 # Purview AI Observability Prototype — Project Context
 
-> **Last updated:** March 26, 2026
+> **Last updated:** May 6, 2026
 > **Primary author:** Min Zhou (minz@microsoft.com)
 > **Repo:** https://github.com/minz_microsoft/P4A365BwCPrototype
 > **Live site:** https://purview-ai-observability-h3cwduabdycvd8ec.westus3-01.azurewebsites.net
@@ -80,6 +80,7 @@ The app has multiple versioned routes to support different customers/experiments
 | `/eastman` | Eastman | `eastmanData.ts` | Customized Eastman customer demo |
 | `/demo` | **Demo** | `agentsData.ts` | Primary active demo version (clean copy from root) |
 | `/cleveland` | Cleveland | `clevelandData.ts` | Cleveland customer demo — spike-to-action investigation prototype |
+| `/local-agents` | **Local Agents** | `agentsData.ts` | Multi-surface AI observability — Cloud Agents, Local Agents, AI Apps tabs |
 
 ### Key files per version
 
@@ -176,6 +177,66 @@ interface DemoAgent {
 - **Governance posture cards:** 4 clickable cards (Needs review, No policy, Changed since review, Never reviewed) with active ring highlight
 - **Card click → table filter:** Clicking a governance card filters the table below, shows a filter banner, auto-scrolls to table, and highlights the active card
 - **Toolbar:** Search, filter chips (Risk level, Department, Risk types), Add filter button
+
+---
+
+## 4b. Local Agents Version — Feature Summary
+
+The Local Agents version (`/local-agents`) implements multi-surface AI observability with three distinct tabs, each optimized for a different AI surface type.
+
+### Navigation: Three-Tab Architecture
+
+| Tab | Entity (row) | Metric unit | Columns |
+|---|---|---|---|
+| **Cloud Agents** (74) | Agent | Interactions | Name, Platform, Status, Agent ID, Risk level, Risk types, Risk activity trend, Policies |
+| **Local Agents** (14) | User + Device + Platform instance | Interactions + Sessions | Agent type, Used by, Device, Status, Agent ID, Risk level, Risk types, Risk activity trend, Policies |
+| **AI Apps** (10) | App | Interactions | Name, Platform, Status, Agent ID, Risk level, Risk types, Risk activity trend, Policies |
+
+### Design Principles
+
+1. **One entity model per view** — Cloud Agents = agent rows, Local Agents = user/device/platform instances, AI Apps = app rows
+2. **Reuse components only when semantics match** — Cloud Agents and AI Apps share identical table columns (both interaction-based)
+3. **No conditional columns** — Each tab has 100% column fill rate; no columns that are blank for some row types
+4. **Strict surface separation** — Never combine Cloud Agents, Local Agents, and AI Apps into one table
+
+### Local Agents Tab — Unique Design
+
+- **Row = usage instance** — Each row represents one user + device + agent tool combination (e.g., "Alice Johnson using GitHub Copilot CLI on Laptop-01")
+- **Agent type column** — Shows the local AI tool name (GitHub Copilot CLI, OpenClaw, NemoClaw, NanoClaw, CopilotClaw) with platform-specific icons
+- **Used by column** — Shows user avatar (initials circle) + user name
+- **Device column** — Shows device identifier
+- **Metrics Card 1** — "14 local agents" headline with Agents/Users/Devices stat blocks (not Active/Inactive)
+- **Filters** — Used by and Device filters only appear on Local Agents tab
+- **Group By** — User and Device grouping only available on Local Agents tab
+
+### AI Apps Tab — Reuses Cloud Agents Pattern
+
+10 AI app entries: Microsoft 365 Copilot, Security Copilot, Fabric Copilot, ChatGPT Enterprise, Gemini for Workspace, GitHub Copilot, Salesforce Einstein, ServiceNow Now Assist, Amazon Q Business, Slack AI.
+
+### Platform Icons (Local Agents)
+
+- **GitHub Copilot CLI** — Official Copilot octicon (goggles silhouette)
+- **OpenClaw** — Terminal icon (dark rectangle with `>_` prompt in red)
+- **NemoClaw** — NVIDIA eye logo (white on green)
+- **NanoClaw / CopilotClaw** — User initials fallback
+
+### Data Model
+
+All three tabs share `agentsData.ts` with `hosting` field distinguishing surfaces:
+- `hosting: 'cloud'` → Cloud Agents tab
+- `hosting: 'local'` → Local Agents tab (includes `userName`, `device`, `sessions` fields)
+- `hosting: 'aiapp'` → AI Apps tab
+
+### Key Files
+
+```
+src/pages/local-agents/
+  LocalAgentsOverview.tsx      — Tab pills, metrics, toolbar, table container
+  LocalAgentsAgents.tsx        — Data-driven table with tab-specific columns, filters, sorting, grouping
+  LocalAgentsAgentDetails.tsx  — Agent detail page adapted for local agents (user/device header, risky interactions/sessions)
+  LocalAgentsActivityExplorer.tsx
+  LocalAgentsSessions.tsx      — Session drill-down page
+```
 
 ---
 
