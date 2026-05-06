@@ -65,7 +65,7 @@ function Toolbar({ groupBy, setGroupBy, activeTab }: { groupBy: 'none' | 'platfo
                    <div className="absolute right-0 top-full mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg z-50 min-w-[180px] py-1">
                      {[
                        { key: 'none' as const, label: 'None' },
-                       { key: 'platform' as const, label: 'Platform' },
+                       { key: 'platform' as const, label: activeTab === 'devices' ? 'Agent type' : 'Platform' },
                        ...(activeTab === 'devices' ? [
                          { key: 'user' as const, label: 'Used by' },
                          { key: 'device' as const, label: 'Device' },
@@ -122,7 +122,7 @@ export default function LocalAgentsOverview() {
 
   return (
     <>
-      <Banner />
+      {/* Banner removed for this version */}
       <main className="flex-1 px-6 py-6 overflow-auto">
         <div className="w-full">
           <div className="mb-6">
@@ -161,7 +161,7 @@ export default function LocalAgentsOverview() {
           <div className="mb-4">
             <div className="text-[18px] font-semibold text-[#242424]">Key metrics</div>
             <div className="text-[14px] text-[#242424] mt-1">
-              {`Showing metrics for ${activeTab === 'cloud' ? 'Cloud Agents' : activeTab === 'devices' ? 'Local Agents' : 'AI Apps'}.`}
+              {`${activeTab === 'cloud' ? 'Cloud agents' : activeTab === 'devices' ? 'AI agents running on user devices,' : 'AI applications'} detected in the last 30 days and their risk posture.`}
             </div>
           </div>
 

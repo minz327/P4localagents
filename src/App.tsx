@@ -30,7 +30,7 @@ import LocalAgentDetail from './pages/local-agents/LocalAgentDetail'
 
 export default function App() {
   return (
-    <BrowserRouter basename="/P4A365BwCPrototype">
+    <BrowserRouter basename="/P4localagents">
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Overview />} />

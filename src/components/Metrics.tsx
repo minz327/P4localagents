@@ -71,7 +71,7 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
     }
   }
 
-  const isFiltered = !!data.tabLabel;
+  const isFiltered = false; // All tabs now have dedicated data, trends always shown
   const isLocal = data.tabLabel === 'local agents';
   const agentLabel = data.tabLabel || 'total agents';
 
@@ -80,21 +80,30 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-5">
         <Card>
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.totalApps} {agentLabel}
+            {data.totalApps} {agentLabel}{isLocal ? ' across' : ''}
           </div>
           {isLocal && data.localDimensions ? (
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[40px] 2xl:gap-[80px]">
             <div>
-              <div className="text-[14px] text-[#242424] flex items-center mb-1">Agents <InfoIcon /></div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueAgents}</div>
+              <div className="text-[14px] text-[#242424] flex items-center mb-1">Agent types <InfoIcon /></div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueAgents}</div>
+                <Trend value="2 new" type="negative" />
+              </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Users <InfoIcon /></div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueUsers}</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueUsers}</div>
+                <Trend value="15%" type="negative" />
+              </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] flex items-center mb-1">Devices <InfoIcon /></div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueDevices}</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.localDimensions.uniqueDevices}</div>
+                <Trend value="8%" type="negative" />
+              </div>
             </div>
           </div>
           ) : (
@@ -121,27 +130,36 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
 
         <Card>
            <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.highRisk} high risk {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}
+            {data.highRisk} high risk{isLocal ? '' : ` ${data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}`}
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[40px] 2xl:gap-[80px]">
             <div>
               <div className="text-[14px] text-[#242424] mb-1">High risk</div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.highRisk}</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.highRisk}</div>
+                <Trend value={isFiltered ? "—" : "25%"} type={isFiltered ? "neutral" : "negative"} />
+              </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] mb-1">Medium risk</div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.mediumRisk}</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.mediumRisk}</div>
+                <Trend value={isFiltered ? "—" : "No change"} type="neutral" />
+              </div>
             </div>
             <div>
               <div className="text-[14px] text-[#242424] mb-1">Low risk</div>
-              <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.lowRisk}</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-[28px] font-semibold text-[#242424] leading-none">{data.lowRisk}</div>
+                <Trend value={isFiltered ? "—" : "10%"} type={isFiltered ? "neutral" : "positive"} />
+              </div>
             </div>
           </div>
         </Card>
 
         <Card>
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical} {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'} with risky interactions
+            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical}{isLocal ? '' : ` ${data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}`} with risky interactions
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[30px] 2xl:gap-[60px]">
             <div>
