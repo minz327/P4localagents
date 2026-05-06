@@ -104,7 +104,7 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
 
         <Card>
            <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.highRisk} high risk{isLocal ? '' : ` ${data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}`}
+            {data.highRisk} high risk {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'}
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[40px] 2xl:gap-[80px]">
             <div>
@@ -124,7 +124,7 @@ export default function Metrics({ data: propData }: { data?: MetricsData }) {
 
         <Card>
           <div className="text-[16px] font-semibold text-[#242424] pb-4 border-b border-[#E0E0E0] mb-5">
-            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical} {isLocal ? '' : `${data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'} `}with risky interactions
+            {data.sensitive.oversharing + data.sensitive.exfiltration + data.sensitive.unethical} {data.tabLabel ? data.tabLabel.split(' ').pop() : 'agents'} with risky interactions
           </div>
           <div className="flex flex-col sm:flex-row gap-8 justify-between xl:gap-[30px] 2xl:gap-[60px]">
             <div>
