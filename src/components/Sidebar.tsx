@@ -62,8 +62,8 @@ function CollapsibleSection({ title, children, defaultOpen = true }: { title: st
 }
 
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
+  const [collapsed, setCollapsed] = useState(location.pathname.startsWith('/local-agents'))
   const navigate = useNavigate()
   const isActivityExplorer = location.pathname === '/activity-explorer'
   const isRoot = location.pathname === '/' || location.pathname.startsWith('/agents')

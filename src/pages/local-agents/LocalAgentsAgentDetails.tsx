@@ -867,7 +867,7 @@ function OverviewContent({ agent, onOpenActivities }: { agent: any; onOpenActivi
                       </div>
                       {isLocal && (
                         <div className="mt-2">
-                          <a href="#" className="text-[#0078D4] text-[11px] hover:underline">View in Insider Risk Management →</a>
+                          <a href="#" className="text-[#0078D4] text-[11px] hover:underline">[Post Build] view in insider risk management</a>
                         </div>
                       )}
                   </div>
