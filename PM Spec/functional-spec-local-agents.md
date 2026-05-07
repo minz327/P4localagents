@@ -192,7 +192,7 @@ Clicking a tab switches the entire view: metrics cards, table columns, available
 
 ---
 
-### P0 — F3: Local-Specific Filters and Grouping
+### P0 — F3: Local-Specific Filters 
 **Jobs enabled:** Job 2 (dimensional pivoting)  
 **Reach:** Every admin who needs to triage local agents  
 **Impact:** High — without this, 14 rows is manageable but the admin can't slice by user or device
@@ -201,6 +201,8 @@ Clicking a tab switches the entire view: metrics cards, table columns, available
 - Risk level, Status, Platform, Risk types — available on all tabs
 - **Used by** — Local Agents tab only. "Show me just Alice Johnson's usage."
 - **Device** — Local Agents tab only. "Show me just Laptop-ALICE-01."
+
+### P1 — F3: Local-Specific Grouping 
 
 **Group By** (dropdown in toolbar):
 - Platform — available on all tabs. Groups rows by tool type.
