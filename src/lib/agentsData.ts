@@ -1,7 +1,7 @@
 export type AgentRow = {
   name: string
   type: 'app' | 'user' // To decide which icon
-  icon?: 'copilot' | 'm365copilot' | 'excel' | 'teams' | 'slack' | 'salesforce' | 'custom' // Specific app icons
+  icon?: 'copilot' | 'm365copilot' | 'excel' | 'teams' | 'slack' | 'salesforce' | 'chatgpt' | 'fabric' | 'custom' // Specific app icons
   initials?: string // For user type
   status: 'Active' | 'Inactive'
   agentId: string
@@ -42,8 +42,8 @@ export const rows: AgentRow[] = [
   // ── AI Apps ──────────────────────────────────────────────────
   { name: 'Microsoft 365 Copilot', type: 'app', icon: 'm365copilot', status: 'Active', agentId: 'App.M365Copilot-a1b2c3...', riskLevel: 'High', riskType: 'Oversharing', sensitiveActivityTrend: [12, 8, 15, 20, 18, 25, 30, 22, 28, 35, 20, 15, 25, 30, 28, 32], dataProtection: '3 Policies', dataCompliance: '2 Policies', authentication: 'Entra ID', hosting: 'aiapp', platform: 'Microsoft 365' },
   { name: 'Security Copilot', type: 'app', icon: 'copilot', status: 'Active', agentId: 'App.SecurityCopilot-d4e5f6...', riskLevel: 'Low', riskType: 'Oversharing', sensitiveActivityTrend: [0, 0, 2, 0, 1, 0, 0, 3, 0, 0, 1, 0, 0, 2, 0, 0], dataProtection: '2 Policies', dataCompliance: '2 Policies', authentication: 'Entra ID', hosting: 'aiapp', platform: 'Microsoft Security' },
-  { name: 'Fabric Copilot', type: 'app', icon: 'custom', status: 'Active', agentId: 'App.FabricCopilot-g7h8i9...', riskLevel: 'Medium', riskType: 'Oversharing, Exfiltration', sensitiveActivityTrend: [0, 5, 3, 8, 0, 6, 10, 4, 0, 7, 5, 0, 8, 3, 6, 0], dataProtection: '1 Policy', dataCompliance: '1 Policy', authentication: 'Entra ID', hosting: 'aiapp', platform: 'Microsoft Fabric' },
-  { name: 'ChatGPT Enterprise', type: 'app', icon: 'custom', status: 'Active', agentId: 'App.ChatGPTEnt-j1k2l3...', riskLevel: 'High', riskType: 'Exfiltration', sensitiveActivityTrend: [5, 10, 8, 15, 20, 12, 18, 25, 15, 20, 30, 18, 22, 28, 20, 25], dataProtection: '0 Policies', dataCompliance: '0 Policies', authentication: 'Access Key', hosting: 'aiapp', platform: 'OpenAI' },
+  { name: 'Fabric Copilot', type: 'app', icon: 'fabric', status: 'Active', agentId: 'App.FabricCopilot-g7h8i9...', riskLevel: 'Medium', riskType: 'Oversharing, Exfiltration', sensitiveActivityTrend: [0, 5, 3, 8, 0, 6, 10, 4, 0, 7, 5, 0, 8, 3, 6, 0], dataProtection: '1 Policy', dataCompliance: '1 Policy', authentication: 'Entra ID', hosting: 'aiapp', platform: 'Microsoft Fabric' },
+  { name: 'ChatGPT Enterprise', type: 'app', icon: 'chatgpt', status: 'Active', agentId: 'App.ChatGPTEnt-j1k2l3...', riskLevel: 'High', riskType: 'Exfiltration', sensitiveActivityTrend: [5, 10, 8, 15, 20, 12, 18, 25, 15, 20, 30, 18, 22, 28, 20, 25], dataProtection: '0 Policies', dataCompliance: '0 Policies', authentication: 'Access Key', hosting: 'aiapp', platform: 'OpenAI' },
   { name: 'Gemini for Workspace', type: 'app', icon: 'custom', status: 'Active', agentId: 'App.GeminiWS-m4n5o6...', riskLevel: 'Medium', riskType: 'Oversharing', sensitiveActivityTrend: [0, 3, 0, 5, 2, 0, 4, 0, 6, 0, 3, 0, 5, 0, 2, 0], dataProtection: '1 Policy', dataCompliance: '0 Policies', authentication: 'Access Key', hosting: 'aiapp', platform: 'Google' },
   { name: 'GitHub Copilot', type: 'app', icon: 'copilot', status: 'Active', agentId: 'App.GHCopilot-p7q8r9...', riskLevel: 'Low', riskType: 'Oversharing', sensitiveActivityTrend: [0, 1, 0, 2, 0, 0, 3, 0, 1, 0, 0, 2, 0, 1, 0, 0], dataProtection: '2 Policies', dataCompliance: '1 Policy', authentication: 'Entra ID', hosting: 'aiapp', platform: 'GitHub' },
   { name: 'Salesforce Einstein', type: 'app', icon: 'salesforce', status: 'Active', agentId: 'App.SFEinstein-s1t2u3...', riskLevel: 'None', riskType: 'No data available', sensitiveActivityTrend: null, dataProtection: '1 Policy', dataCompliance: '1 Policy', authentication: 'Entra ID', hosting: 'aiapp', platform: 'Salesforce' },
