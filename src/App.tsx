@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import MainLayout from './components/MainLayout'
+import MarparLayout from './components/MarparLayout'
 import DlpLayout from './components/DlpLayout'
 import Overview from './pages/Overview'
 import AgentDetails from './pages/AgentDetails'
@@ -27,6 +28,11 @@ import LocalAgentsAgentDetails from './pages/local-agents/LocalAgentsAgentDetail
 import LocalAgentsActivityExplorer from './pages/local-agents/LocalAgentsActivityExplorer'
 import LocalAgentsSessions from './pages/local-agents/LocalAgentsSessions'
 import LocalAgentDetail from './pages/local-agents/LocalAgentDetail'
+import MarparAgentsOverview from './pages/marpar-local-agents/MarparAgentsOverview'
+import MarparAgentsAgentDetails from './pages/marpar-local-agents/MarparAgentsAgentDetails'
+import MarparAgentsActivityExplorer from './pages/marpar-local-agents/MarparAgentsActivityExplorer'
+import MarparAgentsSessions from './pages/marpar-local-agents/MarparAgentsSessions'
+import MarparAgentDetail from './pages/marpar-local-agents/MarparAgentDetail'
 
 export default function App() {
   return (
@@ -65,6 +71,14 @@ export default function App() {
           <Route path="local-agents/activity-explorer" element={<LocalAgentsActivityExplorer />} />
           <Route path="local-agents/sessions" element={<LocalAgentsSessions />} />
           <Route path="local-agents/detail" element={<LocalAgentDetail />} />
+        </Route>
+        {/* Marpar Local Agents routes — separate layout with MarparSidebar */}
+        <Route path="/marpar-local-agents" element={<MarparLayout />}>
+          <Route index element={<MarparAgentsOverview />} />
+          <Route path="agents/:agentId" element={<MarparAgentsAgentDetails />} />
+          <Route path="activity-explorer" element={<MarparAgentsActivityExplorer />} />
+          <Route path="sessions" element={<MarparAgentsSessions />} />
+          <Route path="detail" element={<MarparAgentDetail />} />
         </Route>
         {/* DLP routes — separate layout with DLP sidebar */}
         <Route path="/dlp" element={<DlpLayout />}>
